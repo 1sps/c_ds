@@ -1,0 +1,29 @@
+README
+======
+
+# St: 2016-09-26 Mon 05:10 AM
+# Up: 2016-09-27 Tue 02:34 AM
+
+This directory contains C code for common data structures.
+
+# No  Data Structure                             Status
+===============================================================================
+1.    Singly linked list                         Initial implemented  
+2.    Doubly linked list                         Not started
+3.    Circular linked list                       Not started
+4.    Stack                                      Initial implemented
+5.    Queue                                      Initial implemented
+6.    Deque                                      Not started
+7.    Hash Table                                 Not started
+8.    Binary Tree                                Not started
+9.    Heap                                       Initial implemented
+10.   Binary Seatch Tree                         Not started
+11.   AVL Tree                                   Not started
+12.   2-3 Tree                                   Not started
+13.   2-3-4 Tree                                 Not started 
+14.   Red Black Tree                             Not started
+15.   Splay Tree                                 Not started
+16.   B Tree                                     Not started 
+17.   Scapegoat Tree                             Not started  
+18.   Graph                                      Not started
+

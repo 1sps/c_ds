@@ -48,24 +48,64 @@ struct ll_node {
  * a node and returns pointer to the new copy.
  *
  * @cmp: Pointer to a function which compares two nodes.
+ *
+ * @dval: Pointer to a function which destroys a node's
+ *        `val' 
  */
 struct ll {
 	struct ll_node *head;              /* head of linked list */
 	void *(*cpy)(void *);              /* copy function */
 	int (*cmp)(void *, void *);        /* compare function */
+	void (*dval)(void *);              /* node val destroy function */
 	void (*printl) (struct ll_node *); /* print function */
 	size_t nmemb;                      /* total nodes */   
 };
 
 /* Singly linked list functions */
-struct ll *ll_create(void *(*cpy)(void *),
-                     int (*cmp)(void *, void *),
-		     void (*printl)(struct ll_node *));
+struct ll *ll_create(void *(*cpy)(void *), int (*cmp)(void *, void *),
+		     void (*dval)(void *), void (*printl)(struct ll_node *));
 void ll_insert(struct ll *l, void *val);
 int ll_search(struct ll *l, void *val);
 void ll_delete(struct ll *l, void *val);
 void ll_destroy(struct ll *l);
 void ll_print(struct ll *l);
+
+/*
+ Doubly linked list stuff
+ */
+
+struct dll_node {
+	void *val;
+	struct dll_node *next;
+	struct dll_node *prev;
+};
+
+/*
+ * @cpy: Pointer to a function which copies data from
+ * a node and returns pointer to the new copy.
+ *
+ * @cmp: Pointer to a function which compares two nodes.
+ *
+ * @dval: Pointer to a function which destroys a node's
+ *        `val' 
+ */
+struct dll {
+	struct dll_node *head;              /* head of linked list */
+	void *(*cpy)(void *);               /* copy function */
+	int (*cmp)(void *, void *);         /* compare function */
+	void (*dval)(void *);               /* node val destroy function */
+	void (*printl) (struct dll_node *); /* print function */
+	size_t nmemb;                       /* total nodes */   
+};
+
+/* Doubly linked list functions */
+struct dll *dll_create(void *(*cpy)(void *), int (*cmp)(void *, void *),
+		     void (*dval)(void *), void (*printl)(struct dll_node *));
+void dll_insert(struct dll *l, void *val);
+int dll_search(struct dll *l, void *val);
+void dll_delete(struct dll *l, void *val);
+void dll_destroy(struct dll *l);
+void dll_print(struct dll *l);
 
 
 /*
@@ -87,9 +127,8 @@ struct st {
 };
 
 /* Stack functions */
-struct st *st_create(void *(*cpy)(void *),
-                     int (*cmp)(void *, void *),
-		     void (*printn)(struct st_node *));
+struct st *st_create(void *(*cpy)(void *), int (*cmp)(void *, void *),
+		                     void (*printn)(struct st_node *));
 void st_push(struct st *s, void *val);
 void *st_pop(struct st *s);
 void st_destroy(struct st *s);
@@ -117,8 +156,7 @@ struct queue {
 };
 
 /* Queue functions */
-struct queue *q_create(void *(*cpy)(void *),
-                       int (*cmp)(void *, void *),
+struct queue *q_create(void *(*cpy)(void *), int (*cmp)(void *, void *),
                        void (*printn)(struct q_node *));
 void q_push(struct queue *q, void *val);
 void *q_pop(struct queue *q);
@@ -149,9 +187,7 @@ struct heap {
 #define Child(x, dir)  (2 * (x) + 1 + (dir))
 
 /* Heap functions */
-struct heap *hp_create(size_t cap,
-                       char type,
-		       void *(*cpy)(void *),
+struct heap *hp_create(size_t cap, char type, void *(*cpy)(void *),
 		       int (*cmp)(void *, void *));
 void hp_insert(struct heap *h, void *val);
 void *hp_extract_m(struct heap *h);
@@ -161,9 +197,39 @@ int hp_is_empty(struct heap *h);
 size_t hp_get_size(struct heap *h);
 void hp_print(struct heap *h);
 void **get_sorted_arr(struct heap *h);
-int hp_arr_is_sorted(struct heap *h,
-                     void **arr,
-		     size_t nmemb);
+int hp_arr_is_sorted(struct heap *h, void **arr, size_t nmemb);
+
+/*
+ * Hash Table Stuff
+ */
+
+struct ht_data {
+	void *key;
+	void *val;
+};
+
+struct ht {
+	struct ll **table;                 /* table of linked lists */
+	size_t tot_slots;                  /* total slots in table */
+	void *(*k_cpy) (void *);           /* function to copy key */
+	void *(*v_cpy) (void *);           /* function to copy val */
+	int (*k_cmp)(void *, void *);      /* function to compare keys */
+	int (*v_cmp)(void *, void *);      /* function to compare vals */
+	int (*get_key_size) (void *);      /* function to get size of key */
+	int (*hash_func) (struct ht *, void *);   
+	                                   /* Hash function */
+};
+
+/* Hash Table functions */
+struct ht *ht_create(size_t tot_slots, void *(*k_cpy) (void *),
+	             void *(*v_cpy) (void *), int (*k_cmp) (void *, void *),
+	             int (*v_cmp)(void *, void *), int (*get_key_size)(void *));
+int ht_insert(struct ht *h, void *key, void *val);
+int ht_search(struct ht *h, void *key);
+void ht_delete(struct ht *h, void *key);
+void ht_destroy(struct ht *h);
+void ht_print(struct ht *h, int type);
+
 
 #endif  /* MYLIB_H */
 

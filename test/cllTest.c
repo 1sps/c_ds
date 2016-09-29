@@ -1,8 +1,8 @@
 /*
- * llTest.c: Test code for singly linked list (ll.c)
+ * cllTest.c: Test code for circular linked list
  *
- * St: 2016-09-26 Mon 02:04 AM
- * Up: 2016-09-26 Mon 05:26 AM
+ * St: 2016-09-28 Wed 10:12 PM
+ * Up: 2016-09-28 Wed 10:12 PM
  *
  * Author: SPS
  * 
@@ -115,7 +115,7 @@ int cmp_i(void *val1, void *val2)
  *
  * @l: Pointer to linked list
  */
-void print_int_lln(struct ll_node *lln)
+void print_int_lln(struct cll_node *lln)
 {
 	printf("%d, ", *(int *)lln->val);
 }
@@ -125,7 +125,7 @@ void print_int_lln(struct ll_node *lln)
  *
  * @l: pointer to linked list
  */
-int test_int_create(struct ll *l)
+int test_int_create(struct cll *l)
 {
 	int val1;
 	int val2;
@@ -140,6 +140,7 @@ int test_int_create(struct ll *l)
 
 	/* Test head */
 	assert(l->head == NULL);
+	assert(l->tail == NULL);
 
 	/* Test cpy */
 	val1 = 10;
@@ -171,27 +172,28 @@ int test_int_create(struct ll *l)
  *
  * @l: Pointer to linked list
  */
-int test_int_insert(struct ll *l)
+int test_int_insert(struct cll *l)
 {
 	int i;
 	int *iptr;
 	size_t nmemb_prev;
-	void *head_prev;
+	struct cll_node *head_prev;
 
 	head_prev = l->head;
 	nmemb_prev = l->nmemb;
 	iptr = &i;
 	for (i = 0; i < INITIAL_INS_COUNT; i++) {
-		ll_insert(l, iptr);
+		cll_insert(l, iptr);
 		assert(l->cmp(l->head->val, iptr) == 0);
 		assert(l->nmemb == nmemb_prev + 1);
-		assert(l->head->next == head_prev);
+		if (head_prev != NULL)
+			assert(head_prev->next == l->head);
 		nmemb_prev = l->nmemb;
 		head_prev = l->head;
 	}
 
 #ifdef VISUAL_PRINT
-	ll_print(l);
+	cll_print(l);
 #endif /* VISUAL_PRINT */
 
 	return 1;
@@ -202,7 +204,7 @@ int test_int_insert(struct ll *l)
  *
  * @l: Pointer to linked list
  */
-int test_int_search(struct ll *l)
+int test_int_search(struct cll *l)
 {
 	int i;
 	int *iptr;
@@ -217,15 +219,15 @@ int test_int_search(struct ll *l)
 	 */
 
 	i = 0;
-	assert(ll_search(l, iptr) == 1);
+	assert(cll_search(l, iptr) == 1);
 	i = INITIAL_INS_COUNT-1;
-	assert(ll_search(l, iptr) == 1);
+	assert(cll_search(l, iptr) == 1);
 	i = INITIAL_INS_COUNT/2;
-	assert(ll_search(l, iptr) == 1);
+	assert(cll_search(l, iptr) == 1);
 	i = INITIAL_INS_COUNT;
-	assert(ll_search(l, iptr) == 0);
+	assert(cll_search(l, iptr) == 0);
 	i = -1;
-	assert(ll_search(l, iptr) == 0);
+	assert(cll_search(l, iptr) == 0);
 
 	return 1;
 }
@@ -235,7 +237,7 @@ int test_int_search(struct ll *l)
  *
  * @l: Pointer to linked list
  */
-int test_int_delete(struct ll *l)
+int test_int_delete(struct cll *l)
 {
 	int i;
 	int *iptr;
@@ -252,28 +254,70 @@ int test_int_delete(struct ll *l)
 
 	nmemb_prev = l->nmemb;
 	i = 0;
-	ll_delete(l, iptr);
+	cll_delete(l, iptr);
+	assert(l->nmemb == nmemb_prev-1);
+
+	nmemb_prev = l->nmemb;
+	i = INITIAL_INS_COUNT-2;
+	cll_delete(l, iptr);
 	assert(l->nmemb == nmemb_prev-1);
 
 	nmemb_prev = l->nmemb;
 	i = INITIAL_INS_COUNT-1;
-	ll_delete(l, iptr);
+	cll_delete(l, iptr);
 	assert(l->nmemb == nmemb_prev-1);
 
 	nmemb_prev = l->nmemb;
 	i = INITIAL_INS_COUNT/2;
-	ll_delete(l, iptr);
+	cll_delete(l, iptr);
 	assert(l->nmemb == nmemb_prev-1);
 
 	nmemb_prev = l->nmemb;
 	i = INITIAL_INS_COUNT;
-	ll_delete(l, iptr);
+	cll_delete(l, iptr);
 	assert(l->nmemb == nmemb_prev);
 
 	nmemb_prev = l->nmemb;
 	i = -1;
-	ll_delete(l, iptr);
+	cll_delete(l, iptr);
 	assert(l->nmemb == nmemb_prev);
+
+	/* 
+	 * Test that deleting last node works
+	 *
+	 * Create a list with three nodes. Delete them one after
+	 * another. At the end list should be empty.
+	 */
+
+	struct cll *l2 = cll_create(cpy_i, cmp_i, dval, print_int_lln);
+
+	i = 5;
+	cll_insert(l2, iptr);
+	i = 0;
+	cll_insert(l2, iptr);
+	i = -5;
+	cll_insert(l2, iptr);
+
+	nmemb_prev = l2->nmemb;
+	i = 5;
+	cll_delete(l2, iptr);
+	assert(l2->nmemb == nmemb_prev-1);
+
+	nmemb_prev = l2->nmemb;
+	i = 0;
+	cll_delete(l2, iptr);
+	assert(l2->nmemb == nmemb_prev-1);
+
+	nmemb_prev = l2->nmemb;
+	i = -5;
+	cll_delete(l2, iptr);
+	assert(l2->nmemb == nmemb_prev-1);
+
+	assert(l2->head == NULL);
+	assert(l2->tail == NULL);
+	assert(l2->nmemb == 0);
+
+	cll_destroy(l2);
 
 	return 1;
 }
@@ -281,16 +325,16 @@ int test_int_delete(struct ll *l)
 /* Test int linked list */
 int test_int(void)
 {
-	struct ll *l;
+	struct cll *l;
 
-	l = ll_create(cpy_i, cmp_i, dval, print_int_lln);
+	l = cll_create(cpy_i, cmp_i, dval, print_int_lln);
 	assert(test_int_create(l) == 1);
 	assert(test_int_insert(l) == 1);
-	ll_print(l);
+	cll_print(l);
 	assert(test_int_search(l) == 1 );
 	assert(test_int_delete(l) == 1 );
 
-	ll_destroy(l);
+	cll_destroy(l);
 	l = NULL;
 
 	return 1;
@@ -343,11 +387,21 @@ int cmp_s(void *str1, void *str2)
 }
 
 /*
+ * Print int linked list
+ *
+ * @l: Pointer to linked list
+ */
+void print_str_lln(struct cll_node *lln)
+{
+	printf("%s, ", (char *)lln->val);
+}
+
+/*
  * Test create function for str linked list 
  *
  * @l: pointer to linked list
  */
-int test_str_create(struct ll *l)
+int test_str_create(struct cll *l)
 {
 	char *str1;
 	char *str2;
@@ -388,27 +442,28 @@ int test_str_create(struct ll *l)
  *
  * @l: Pointer to linked list
  */
-int test_str_insert(struct ll *l)
+int test_str_insert(struct cll *l)
 {
 	int i;
 	char str[10] = "hello";
 	size_t nmemb_prev;
-	void *head_prev;
+	struct cll_node  *head_prev;
 
 	head_prev = l->head;
 	nmemb_prev = l->nmemb;
 	for (i = 0; i < INITIAL_INS_COUNT; i++) {
 		str[1] = 'e' + i;
-		ll_insert(l, str);
+		cll_insert(l, str);
 		assert(l->cmp(l->head->val, str) == 0);
 		assert(l->nmemb == nmemb_prev + 1);
-		assert(l->head->next == head_prev);
+		if (head_prev != NULL)
+			assert(head_prev->next == l->head);
 		nmemb_prev = l->nmemb;
 		head_prev = l->head;
 	}
 
 #ifdef VISUAL_PRINT
-	ll_print(l);
+	cll_print(l);
 #endif /* VISUAL_PRINT */
 
 	return 1;
@@ -419,7 +474,7 @@ int test_str_insert(struct ll *l)
  *
  * @l: Pointer to linked list
  */
-int test_str_search(struct ll *l)
+int test_str_search(struct cll *l)
 {
 	char str[10] = "hello";
 
@@ -430,15 +485,15 @@ int test_str_search(struct ll *l)
 	 * be better if this knowledge dependency is removed.
 	 */
 
-	assert(ll_search(l, str) == 1);
+	assert(cll_search(l, str) == 1);
 	str[1] = 'e' + 1;
-	assert(ll_search(l, str) == 1);
+	assert(cll_search(l, str) == 1);
 	str[1] = 'e' + INITIAL_INS_COUNT-1;
-	assert(ll_search(l, str) == 1);
+	assert(cll_search(l, str) == 1);
 	str[1] = 'd';
-	assert(ll_search(l, str) == 0);
+	assert(cll_search(l, str) == 0);
 	str[0] = 'a';
-	assert(ll_search(l, str) == 0);
+	assert(cll_search(l, str) == 0);
 
 	return 1;
 }
@@ -448,7 +503,7 @@ int test_str_search(struct ll *l)
  *
  * @l: Pointer to linked list
  */
-int test_str_delete(struct ll *l)
+int test_str_delete(struct cll *l)
 {
 	int i;
 	char str[10] = "hello";
@@ -464,31 +519,31 @@ int test_str_delete(struct ll *l)
 	nmemb_prev = l->nmemb;
 	i = 0;
 	str[1] = 'e' + i;
-	ll_delete(l, str);
+	cll_delete(l, str);
 	assert(l->nmemb == nmemb_prev-1);
 
 	nmemb_prev = l->nmemb;
 	i = INITIAL_INS_COUNT-1;
 	str[1] = 'e' + i;
-	ll_delete(l, str);
+	cll_delete(l, str);
 	assert(l->nmemb == nmemb_prev-1);
 
 	nmemb_prev = l->nmemb;
 	i = INITIAL_INS_COUNT/2;
 	str[1] = 'e' + i;
-	ll_delete(l, str);
+	cll_delete(l, str);
 	assert(l->nmemb == nmemb_prev-1);
 
 	nmemb_prev = l->nmemb;
 	i = INITIAL_INS_COUNT;
 	str[1] = 'e' + i;
-	ll_delete(l, str);
+	cll_delete(l, str);
 	assert(l->nmemb == nmemb_prev);
 
 	nmemb_prev = l->nmemb;
 	i = -1;
 	str[1] = 'e' + i;
-	ll_delete(l, str);
+	cll_delete(l, str);
 	assert(l->nmemb == nmemb_prev);
 
 	return 1;
@@ -497,16 +552,16 @@ int test_str_delete(struct ll *l)
 /* Test str linked list */
 int test_str(void)
 {
-	struct ll *l;
+	struct cll *l;
 
-	l = ll_create(cpy_s, cmp_s, dval, NULL);
+	l = cll_create(cpy_s, cmp_s, dval, print_str_lln);
 	assert(test_str_create(l) == 1);
 	assert(test_str_insert(l) == 1);
-	ll_print(l);
+	cll_print(l);
 	assert(test_str_search(l) == 1);
 	assert(test_str_delete(l) == 1);
 
-	ll_destroy(l);
+	cll_destroy(l);
 	l = NULL;
 
 	return 1;

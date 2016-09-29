@@ -1,7 +1,7 @@
 /* mylib.h: Header file (interface) for my C library
  *
  * St: 2016-09-26 Mon 01:47 AM
- * Up: 2016-09-27 Tue 02:29 AM
+ * Up: 2016-09-29 Thu 01:24 AM
  *
  * Author: SPS
  *
@@ -70,43 +70,6 @@ void ll_delete(struct ll *l, void *val);
 void ll_destroy(struct ll *l);
 void ll_print(struct ll *l);
 
-/*
- Doubly linked list stuff
- */
-
-struct dll_node {
-	void *val;
-	struct dll_node *next;
-	struct dll_node *prev;
-};
-
-/*
- * @cpy: Pointer to a function which copies data from
- * a node and returns pointer to the new copy.
- *
- * @cmp: Pointer to a function which compares two nodes.
- *
- * @dval: Pointer to a function which destroys a node's
- *        `val' 
- */
-struct dll {
-	struct dll_node *head;              /* head of linked list */
-	void *(*cpy)(void *);               /* copy function */
-	int (*cmp)(void *, void *);         /* compare function */
-	void (*dval)(void *);               /* node val destroy function */
-	void (*printl) (struct dll_node *); /* print function */
-	size_t nmemb;                       /* total nodes */   
-};
-
-/* Doubly linked list functions */
-struct dll *dll_create(void *(*cpy)(void *), int (*cmp)(void *, void *),
-		     void (*dval)(void *), void (*printl)(struct dll_node *));
-void dll_insert(struct dll *l, void *val);
-int dll_search(struct dll *l, void *val);
-void dll_delete(struct dll *l, void *val);
-void dll_destroy(struct dll *l);
-void dll_print(struct dll *l);
-
 
 /*
  * Stack stuff
@@ -164,6 +127,115 @@ void q_destroy(struct queue *q);
 int q_is_empty(struct queue *q);
 void q_print(struct queue *q);
 
+/* 
+ * Circular linked list stuff 
+ */
+
+struct cll_node {
+	void *val;
+	struct cll_node *next;
+};
+
+struct cll {
+	struct cll_node *head;              /* head of linked list */
+	struct cll_node *tail;              /* tail of linked list */
+	void *(*cpy)(void *);               /* copy function */
+	int (*cmp)(void *, void *);         /* compare function */
+	void (*dval)(void *);               /* node val destroy function */
+	void (*printl) (struct cll_node *); /* print function */
+	size_t nmemb;                       /* total nodes */   
+};
+
+/* Circular linked list functions */
+struct cll *cll_create(void *(*cpy)(void *), int (*cmp)(void *, void *),
+		     void (*dval)(void *), void (*printl)(struct cll_node *));
+void cll_insert(struct cll *l, void *val);
+int cll_search(struct cll *l, void *val);
+void cll_delete(struct cll *l, void *val);
+void cll_destroy(struct cll *l);
+void cll_print(struct cll *l);
+
+/*
+ * Doubly linked list stuff
+ */
+
+struct dll_node {
+	void *val;
+	struct dll_node *next;
+	struct dll_node *prev;
+};
+
+/*
+ * @cpy: Pointer to a function which copies data from
+ * a node and returns pointer to the new copy.
+ *
+ * @cmp: Pointer to a function which compares two nodes.
+ *
+ * @dval: Pointer to a function which destroys a node's
+ *        `val' 
+ */
+struct dll {
+	struct dll_node *head;              /* head of linked list */
+	void *(*cpy)(void *);               /* copy function */
+	int (*cmp)(void *, void *);         /* compare function */
+	void (*dval)(void *);               /* node val destroy function */
+	void (*printl) (struct dll_node *); /* print function */
+	size_t nmemb;                       /* total nodes */   
+};
+
+/* Doubly linked list functions */
+struct dll *dll_create(void *(*cpy)(void *), int (*cmp)(void *, void *),
+		     void (*dval)(void *), void (*printl)(struct dll_node *));
+void dll_insert(struct dll *l, void *val);
+int dll_search(struct dll *l, void *val);
+void dll_delete(struct dll *l, void *val);
+void dll_destroy(struct dll *l);
+void dll_print(struct dll *l);
+
+/*
+ * Deque stuff
+ */
+
+struct deque_node {
+	void *val;
+	struct deque_node *next;
+	struct deque_node *prev;
+};
+
+/*
+ * @cpy: Pointer to a function which copies data from
+ * a node and returns pointer to the new copy.
+ *
+ * @cmp: Pointer to a function which compares two nodes.
+ *
+ * @dval: Pointer to a function which destroys a node's
+ *        `val' 
+ */
+struct deque {
+	struct deque_node *head;              /* head of deque */
+	struct deque_node *tail;              /* tail of deque */
+	void *(*cpy)(void *);                 /* copy function */
+	int (*cmp)(void *, void *);           /* compare function */
+	void (*dval)(void *);                 /* node val destroy function */
+	void (*printl) (struct deque_node *); /* print function */
+	size_t nmemb;                         /* total nodes */   
+};
+
+/* Directions for deque insert */
+#define DEQUE_HEAD 50
+#define DEQUE_TAIL 51
+
+/* Deque functions */
+struct deque *deque_create(void *(*cpy)(void *), int (*cmp)(void *, void *),
+		           void (*dval)(void *),
+			   void (*printl)(struct deque_node *));
+int deque_insert(struct deque *dek, int dir, void *val);
+void *deque_pop(struct deque *dek, int dir);
+int deque_is_empty(struct deque *dek);
+int deque_search(struct deque *dek, void *val);
+void deque_delete(struct deque *dek, void *val);
+void deque_destroy(struct deque *dek);
+void deque_print(struct deque *dek);
 
 /*
  * Heap stuff

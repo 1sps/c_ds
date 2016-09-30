@@ -1,7 +1,7 @@
 /* mylib.h: Header file (interface) for my C library
  *
  * St: 2016-09-26 Mon 01:47 AM
- * Up: 2016-09-29 Thu 01:24 AM
+ * Up: 2016-09-30 Fri 05:07 AM
  *
  * Author: SPS
  *
@@ -84,6 +84,7 @@ struct st {
 	struct st_node *head;              /* head(top) of the stack */
 	void *(*cpy)(void *);              /* copy function */
 	int (*cmp)(void *, void *);        /* compare function */
+	void (*dval) (void *);             /* value destroy function */
 	void (*printn) (struct st_node *); /* print function */
 	size_t nmemb;                      /* total nodes */   
 
@@ -91,7 +92,7 @@ struct st {
 
 /* Stack functions */
 struct st *st_create(void *(*cpy)(void *), int (*cmp)(void *, void *),
-		                     void (*printn)(struct st_node *));
+		     void (*dval)(void *), void (*printn)(struct st_node *));
 void st_push(struct st *s, void *val);
 void *st_pop(struct st *s);
 void st_destroy(struct st *s);
@@ -302,6 +303,35 @@ void ht_delete(struct ht *h, void *key);
 void ht_destroy(struct ht *h);
 void ht_print(struct ht *h, int type);
 
+/* 
+ * Binary Search Tree Stuff 
+ */
+
+struct bst_node {
+	void *val;
+	struct bst_node *left;
+	struct bst_node *right;
+};
+
+struct bst {
+	struct bst_node *root; 
+	void *(*cpy)(void *);                 /* copy function */
+	int (*cmp)(void *, void *);           /* compare function */
+	void (*dval)(void *);                 /* node val destroy function */
+	void (*printn) (struct bst_node *);   /* print function */
+	size_t nmemb;                         /* total nodes */   
+};
+
+
+/* Binary Search Tree Functions */ 
+struct bst *bst_create(void *(*cpy)(void *), int (*cmp)(void *, void *),
+                       void (*dval)(void *),
+		       void (*printn) (struct bst_node *));
+int bst_insert(struct bst *t, void *val);
+struct bst_node *bst_search(struct bst *t, void *val);
+void *bst_delete(struct bst *t, void *val);
+void bst_destroy(struct bst *t);
+void bst_print(struct bst *t);
 
 #endif  /* MYLIB_H */
 

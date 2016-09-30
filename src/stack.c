@@ -2,7 +2,7 @@
  * st.c: Stack implementation
  *
  * St: 2016-09-26 Mon 03:21 PM
- * Up: 2016-09-26 Mon 05:44 PM
+ * Up: 2016-09-29 Thu 05:26 AM
  *
  * Author: SPS
  *
@@ -47,6 +47,7 @@
  */
 struct st *st_create(void *(*cpy)(void *),
                      int (*cmp)(void *, void *),
+		     void (*dval)(void *),
 		     void (*printn)(struct st_node *))
 {
 	struct st *s;
@@ -62,6 +63,7 @@ struct st *st_create(void *(*cpy)(void *),
 	s->head = NULL;
 	s->cpy = cpy;
 	s->cmp = cmp;
+	s->dval = dval;
 	s->printn = printn;
 	s->nmemb = 0;
 
@@ -131,7 +133,7 @@ void *st_pop(struct st *s)
 		 */
 		stn = s->head;
 		s->head = s->head->next;
-		free(stn->val);
+		s->dval(stn->val);
 		free(stn);
 		s->nmemb--;
 	}
@@ -154,7 +156,7 @@ void st_destroy(struct st *s)
 	cur = s->head;
 	while (cur != NULL) {
 		next = cur->next;
-		free(cur->val);
+		s->dval(cur->val);
 		free(cur);
 		cur = next;
 	}

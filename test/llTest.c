@@ -278,6 +278,48 @@ int test_int_delete(struct ll *l)
 	return 1;
 }
 
+/*
+ * Test iteration interface for int linked list
+ *
+ * @l: Pointer to the linked list structure
+ */
+int test_int_iterate(void)
+{
+	int i;
+	int *iptr;
+	int *val;
+	void *itr;
+	struct ll *l;
+
+	printf("Starting iterate test..\n");
+	iptr = &i;
+
+	/* Create linked list */
+	l = ll_create(cpy_i, cmp_i, dval, print_int_lln);
+
+	/* Insert few items to the list */
+	for (i = 0; i < INITIAL_INS_COUNT; i++) {
+		ll_insert(l, iptr);
+	}
+
+	/* Iterate through the list, asserting correcteness */
+	itr = ll_first(l);
+	for (i = 0; i < INITIAL_INS_COUNT; i++) {
+		assert(ll_done(itr) == 0); 
+		val = ll_next(l, &itr);
+		assert(*(int *) val == INITIAL_INS_COUNT-i-1);
+		printf("%d, ", *(int *) val);
+		free(val);
+	}
+	putchar('\n');
+	assert(ll_done(itr) == 1); 
+
+	/* Destroy linked list */
+	ll_destroy(l);
+
+	return 1;
+}
+
 /* Test int linked list */
 int test_int(void)
 {
@@ -289,6 +331,7 @@ int test_int(void)
 	ll_print(l);
 	assert(test_int_search(l) == 1 );
 	assert(test_int_delete(l) == 1 );
+	assert(test_int_iterate() == 1 );
 
 	ll_destroy(l);
 	l = NULL;

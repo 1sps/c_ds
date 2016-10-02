@@ -70,6 +70,9 @@ void ll_delete(struct ll *l, void *val);
 void ll_destroy(struct ll *l);
 void ll_print(struct ll *l);
 int ll_is_empty(struct ll *l);
+void* ll_first(struct ll *l);
+void* ll_next(struct ll *l, void **itrp);
+int ll_done(void *itr);
 
 
 /*

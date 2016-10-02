@@ -245,4 +245,58 @@ int ll_is_empty(struct ll *l)
 	return retval;
 }
 
+/*
+ * Initialize iterator for the linked list.
+ * Returns the pointer to first item.
+ *
+ * @l: Pointer to the linked list structure
+ */
+void* ll_first(struct ll *l)
+{
+	void *first;
+
+	first = l->head;
+
+	return first;
+}
+
+/*
+ * Get the next value from linked list iteration.
+ * ll_first should be called before this function is called.
+ *
+ * @itrp: Pointer to iterator
+ */
+void* ll_next(struct ll *l, void **itrp)
+{
+	void *retval;
+	struct ll_node *lln;
+
+	lln = (struct ll_node *) *itrp;
+
+	/* Make a copy of current node val to return */
+	retval = l->cpy(lln->val);
+
+	/* Update iterator */
+	*itrp = lln->next;
+
+	return retval;
+}
+
+/*
+ * Check if iteration is completed
+ *
+ * @itr: Iterator
+ */
+int ll_done(void *itr)
+{
+	int retval;
+
+	if (itr == NULL)
+		retval = 1;
+	else
+		retval = 0;
+
+	return retval;
+}
+
 

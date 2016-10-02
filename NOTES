@@ -2,7 +2,7 @@ NOTES
 =====
 
 # St: 2016-09-26 Mon 05:10 AM
-# Up: 2016-09-29 Thu 01:26 AM
+# Up: 2016-10-02 Sun 05:35 AM
 
 # No  Data Structure                  Dev Status               Test Status
 ===============================================================================
@@ -23,7 +23,7 @@ NOTES
 15.   Splay Tree                      Not started              NA
 16.   B Tree                          Not started              NA
 17.   Scapegoat Tree                  Not started              NA
-18.   Graph                           Not started              NA
+18.   Graph                           Initial on               Initial test on
 
 
 Test Notes
@@ -33,4 +33,11 @@ Test Notes
 =======================
 stack.c has to be tested again.
 Reason: dval functionality was added
+
+
+2016-10-02 Sun 05:58 PM
+=======================
+Iterator interface added to:
+
+1. Singly linked-list: Yes
 

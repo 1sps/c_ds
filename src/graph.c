@@ -2,7 +2,7 @@
  * src/graph.c:
  *
  * St: 2016-10-01 Sat 06:24 PM
- * Up: 2016-10-02 Sun 05:25 AM
+ * Up: 2016-10-02 Sun 07:39 PM
  *
  * Author: SPS
  */
@@ -16,13 +16,15 @@
 #define SKIP
 
 /* Function prototype declaration of helper functions */
-static int conv_to_int(int (*get_size)(void *), void *val);
+static int *conv_label_to_int(struct graph *g, void *label);
 static void *conv_from_int(void *val);
 static struct hlpr_ht *hlpr_ht_create(int nvert, int (*get_size)(void *));
 void *cpy_i(void *src);
 int cmp_i(void *val1, void *val2);
 void printn_i(struct ll_node *lln);
 void dval_i(void *);
+static void bfs_init_search_graph(struct graph *g);
+static void bfs_update_nbrs(struct graph *g, struct queue *q, int *cur);
 
 /*
  * Create a graph.
@@ -174,14 +176,8 @@ int graph_has_edge(struct graph *g, void *src, void *dest)
 	retval = 0;
 
 	/* Convert labels to int if needed */
-	if (g->type != GRAPH_INT) {
-		/* isrc = todo(); */
-		/* idest = todo(); */
-		;
-	} else {
-		isrc = *(int * ) src;
-		idest = *(int * ) dest;
-	}
+	isrc = *conv_label_to_int(g, src);
+	idest = *conv_label_to_int(g, dest);
 
 	/* Search for the edge */
 	retval = ll_search(g->alist[isrc]->l, dest);
@@ -223,37 +219,21 @@ void graph_print(struct graph *g)
 int graph_bfs(struct graph *g, void *src, void *dest)
 {
 	int i;
+	int *cur;
+	int retval;
 	void *isrc;
 	void *idest;
-	int *cur;
 	struct queue *q;
-	int retval;
 
-	/* Allocate space for search_graph if needed */
-	if (g->search_graph == NULL) {
-		g->search_graph = malloc(sizeof(struct search_node) * g->nvert);
-		assert(g->search_graph);
-	}
-
-	/* Initialise search_graph */
-	for (i = 0; i < g->nvert; i++) {
-		g->search_graph[i].vtx = i;
-		g->search_graph[i].par = NIL;
-		g->search_graph[i].dist = INFINITE;
-	}
+	/* Initialize search_graph */
+	bfs_init_search_graph(g);
 
 	/* Create queue */
 	q = q_create(cpy_i, cmp_i, NULL);
 
 	/* Change labels to int equivalent if needed */
-	if (g->type != GRAPH_INT) {
-		/* isrc = todo(src); */
-		/* idest = todo(dest); */
-		;
-	} else {
-		isrc = src;
-		idest = dest;
-	}
+	isrc = conv_label_to_int(g, src);
+	idest = conv_label_to_int(g, dest);
 
 	/* Set par and distance for root (src) */
 	g->search_graph[*(int *)isrc].par = *(int *)isrc;
@@ -262,41 +242,10 @@ int graph_bfs(struct graph *g, void *src, void *dest)
 	/* Enqueue root (src) */
 	q_push(q, isrc);
 
+	/* For each vertex update neighbors */
 	while (!q_is_empty(q)) {
 		cur = q_pop(q);
-
-		/*
-		 * foreach adjacent node of cur
-		 *     if not visited then
-		 *         update parent, distance and enqueue
-		 */
-
-		/* 
-		 * TODO: Linked list should provide an interface
-		 * to iterate through the list. For now, as seen below
-		 * we are writing code which is aware of linked-list
-		 * implementation. This knowledge dependency is not
-		 * good and should be avoided.
-		 */
-
-		struct ll_node *lln;
-		struct ll *cur_list;
-
-		cur_list = g->alist[*cur]->l;
-
-		lln = cur_list->head;
-		while (lln != NULL) {
-			if (g->search_graph[*(int *)lln->val].par == NIL) {
-				g->search_graph[*(int *)lln->val].par = *cur;
-				g->search_graph[*(int *)lln->val].dist =
-				               g->search_graph[*cur].dist + 1;
-				q_push(q, lln->val);
-			}
-			lln = lln->next;
-		}
-
-		/* TODO: Until there. See above TODO  */
-
+		bfs_update_nbrs(g, q, cur);
 		free(cur);
 	}
 
@@ -316,9 +265,13 @@ int graph_bfs(struct graph *g, void *src, void *dest)
 	return retval;
 }
 
-/*******************************************************************************
+
+/*
+ *******************************************************************************
  * Helper functions
- ******************************************************************************/
+ *******************************************************************************
+ */
+
 
 /*
  * Make a copy of an int 
@@ -404,19 +357,20 @@ int get_int_size(void *vptr)
 }
 
 /*
- * Convert a data to a unique int
+ * Convert a vertex label to a int
  *
- * @get_size: Pointer to a function to give the size of data
- * @src:      Pointer to data
+ * @g:     Pointer to the graph structure
+ * @label: Pointer to label to convert
  */
-static int conv_to_int(int (*get_size)(void *), void *src)
+static int *conv_label_to_int(struct graph *g, void *label)
 {
-	int retval;
-	int size;
+	int *retval;
 
-	size = get_size(src);
-
-	/* retval = todo(); */
+	if (g->type != GRAPH_INT)
+		/* retval = todo(label); */
+		;
+	else
+		retval = label;
 
 	return retval;
 }
@@ -454,5 +408,59 @@ static int hash_func(struct ht *h, void *key)
 	}
 
 	return hash_val % h->tot_slots;
+}
+
+/*
+ * Update the neighbors of a vertex during BFS search.
+ *
+ * @g:   Pointer to the graph structure
+ * @cur:
+ */
+static void bfs_update_nbrs(struct graph *g, struct queue *q, int *cur)
+{
+	void *ll_itr;
+	void *nbr_vtx;
+
+	/*
+	 * foreach adjacent node of cur
+	 *     if not visited then
+	 *         update parent, distance, and enqueue it
+	 */
+
+	ll_itr = ll_first(g->alist[*cur]->l);
+
+	while (!ll_done(ll_itr)) {
+		nbr_vtx = ll_next(g->alist[*cur]->l, &ll_itr);
+		if (g->search_graph[*(int *)nbr_vtx].par == NIL) {
+			g->search_graph[*(int *)nbr_vtx].par = *cur;
+			g->search_graph[*(int *)nbr_vtx].dist =
+				       g->search_graph[*cur].dist + 1;
+			q_push(q, nbr_vtx);
+		}
+		free(nbr_vtx);
+	}
+}
+
+/*
+ * Initialize search_graph for BFS search
+ *
+ * @g: Pointer to the graph structure
+ */
+static void bfs_init_search_graph(struct graph *g)
+{
+	int i;
+
+	/* Allocate space for search_graph if needed */
+	if (g->search_graph == NULL) {
+		g->search_graph = malloc(sizeof(struct search_node) * g->nvert);
+		assert(g->search_graph);
+	}
+
+	/* Initially all node is unreachable */
+	for (i = 0; i < g->nvert; i++) {
+		g->search_graph[i].vtx = i;
+		g->search_graph[i].par = NIL;
+		g->search_graph[i].dist = INFINITE;
+	}
 }
 

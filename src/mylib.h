@@ -69,6 +69,7 @@ int ll_search(struct ll *l, void *val);
 void ll_delete(struct ll *l, void *val);
 void ll_destroy(struct ll *l);
 void ll_print(struct ll *l);
+int ll_is_empty(struct ll *l);
 
 
 /*
@@ -322,6 +323,11 @@ struct bst {
 	size_t nmemb;                         /* total nodes */   
 };
 
+#define PRINT_STDOUT 100
+#define PRINT_STRING 101
+#define PRINT_FILE   102
+
+#define MAX_NODE_PRINT_LEN 100
 
 /* Binary Search Tree Functions */ 
 struct bst *bst_create(void *(*cpy)(void *), int (*cmp)(void *, void *),
@@ -332,6 +338,52 @@ struct bst_node *bst_search(struct bst *t, void *val);
 void *bst_delete(struct bst *t, void *val);
 void bst_destroy(struct bst *t);
 void bst_print(struct bst *t);
+
+/* 
+ * Graph stuff 
+ */
+
+/* Hash table for preprocessing */
+struct hlpr_ht {
+	int *table;
+	size_t nmemb;
+	size_t cap;
+	int (*get_size)(void *);
+};
+
+#define GRAPH_INT    100
+#define GRAPH_NO_INT 101
+
+struct adjlist {
+	struct ll *l;
+};
+
+/* Graph structure */
+struct graph {
+	int type;
+	/* struct hlpr_ht *ht; */
+	int nvert;
+	int nedge;
+	struct adjlist **alist;
+
+	/* For BFS/DFS search */
+	struct search_node {
+		int vtx;
+		int par;
+		int dist;
+	} *search_graph;
+};
+
+/* Graph functions */
+struct graph *graph_create(int nvert, int type);
+void graph_destroy(struct graph *g);
+void graph_add_edge(struct graph *g, void *src, void *dest);
+int graph_tot_vertex(struct graph *g);
+int graph_tot_edge(struct graph *g);
+int graph_has_edge(struct graph *g, void *src, void *dest);
+void graph_print(struct graph *g);
+int graph_out_degree(struct graph *g, void *src);
+int graph_bfs(struct graph *g, void *src, void *dest);
 
 #endif  /* MYLIB_H */
 

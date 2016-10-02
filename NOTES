@@ -1,0 +1,36 @@
+NOTES
+=====
+
+# St: 2016-09-26 Mon 05:10 AM
+# Up: 2016-09-29 Thu 01:26 AM
+
+# No  Data Structure                  Dev Status               Test Status
+===============================================================================
+1.    Singly linked list              Initial implemented      Initial tested
+2.    Doubly linked list              Initial implemented      Not started
+3.    Circular linked list            Initial implemented      Initial tested 
+4.    Stack                           Initial implemented      Initial tested 
+5.    Queue                           Initial implemented      Initial tested
+6.    Deque                           Initial implemented      Initial tested
+7.    Hash Table                      Initial implemented      Initial test on
+8.    Binary Tree                     Not started              NA
+9.    Heap                            Initial implemented      Initial test on
+10.   Binary Search Tree              Initial implemented      Initial test on
+11.   AVL Tree                        Not started              NA  
+12.   2-3 Tree                        Not started              NA   
+13.   2-3-4 Tree                      Not started              NA
+14.   Red Black Tree                  Not started              NA
+15.   Splay Tree                      Not started              NA
+16.   B Tree                          Not started              NA
+17.   Scapegoat Tree                  Not started              NA
+18.   Graph                           Not started              NA
+
+
+Test Notes
+==========
+
+2016-09-29 Thu 05:27 AM
+=======================
+stack.c has to be tested again.
+Reason: dval functionality was added
+

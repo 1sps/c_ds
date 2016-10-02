@@ -228,3 +228,21 @@ void ll_print(struct ll *l)
 	putchar('\n');
 }
 
+/*
+ * Test if linked list is empty
+ *
+ * @l: Pointer to the linked list structure
+ */
+int ll_is_empty(struct ll *l)
+{
+	int retval;
+
+	if (l->head == NULL)
+		retval = 1;
+	else
+		retval = 0;
+
+	return retval;
+}
+
+

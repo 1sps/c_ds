@@ -162,43 +162,63 @@ int test_int_bst_delete(void)
 	j = 19;
 	bst_insert(t, jptr);
 
+	/* Print the tree to stdout */
+	printf("Printing original tree\n\n");
+	printf("======================");
+	bst_print(t);
+
 	/* Delete a non-existent node */
 	j = 100;
+	printf("Deleting node: %d\n", j);
+	printf("===================");
 	prev_nmemb = t->nmemb; 
 	tmp = bst_delete(t, jptr); 
 	free(tmp); 
 	assert(t->nmemb == prev_nmemb); 
+	bst_print(t);
 
 	/* Delete a leaf node */
 	j = 2;
+	printf("Deleting node: %d\n", j);
+	printf("===================");
 	prev_nmemb = t->nmemb; 
 	tmp = bst_delete(t, jptr); 
 	free(tmp); 
 	assert(t->nmemb == prev_nmemb-1); 
+	bst_print(t);
 
 	/* Delete a node with only left child */
 	j = 12;
+	printf("Deleting node: %d\n", j);
+	printf("===================");
 	prev_nmemb = t->nmemb; 
 	tmp = bst_delete(t, jptr); 
 	free(tmp); 
 	assert(t->nmemb == prev_nmemb-1); 
+	bst_print(t);
 
 	/* Delete a node with only right child */
 	j = 18;
+	printf("Deleting node: %d\n", j);
+	printf("===================");
 	prev_nmemb = t->nmemb; 
 	tmp = bst_delete(t, jptr); 
 	free(tmp); 
 	assert(t->nmemb == prev_nmemb-1); 
+	bst_print(t);
 
 	/*
 	 * Delete a node with both children
 	 * and also root node
 	 */
 	j = 10;
+	printf("Deleting node: %d\n", j);
+	printf("===================");
 	prev_nmemb = t->nmemb; 
 	tmp = bst_delete(t, jptr); 
 	free(tmp); 
 	assert(t->nmemb == prev_nmemb-1); 
+	bst_print(t);
 
 	/*
 	 * TODO: Assert after each delete BST property is
@@ -276,7 +296,9 @@ int main(void)
 /*
  * Print a node of int bst
  *
- * @bstn: Pointer to a bst node
+ * @bstn:       BST node to print
+ * @print_dest: Destination of print
+ * @sf:         Pointer to the file or string destination
  */
 void printn_i(struct bst_node *bstn)
 {

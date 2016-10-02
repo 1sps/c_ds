@@ -1,14 +1,13 @@
 /*
  * src/bst.c: Binary search tree implementation in C
- *
  * St: 2016-09-29 Thu 02:48 AM
- * Up: 2016-09-30 Fri 05:07 AM
+ * Up: 2016-09-30 Fri 08:38 PM
  *
  * Author: SPS
  *
  * This file is copyright 2016 SPS.
  * 
- * Permission is hereby granted, free of charge, to any person
+ * Permission is hereby granted, free of charge, to any erson
  * obtaining a copy of this software and associated documentation
  * files (the "Software"), to deal in the Software without
  * restriction, including without limitation the rights to use,
@@ -27,9 +26,17 @@
  * ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF
  * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
+ * SOFTWARE. 
  */
 
+
+/*
+ * Note: bst_print function has to be completed. Other funcitons are
+ *       completed - although can be improved.
+ *
+ * Note: Good descriptive names are to be given for some functions with
+ *       ibscure names.
+ */
 #include<stdio.h>
 #include<stdlib.h>
 #include<assert.h>
@@ -50,8 +57,9 @@ static struct bst_node *bst_hlpr_pop_and_destroy(struct st *s, struct bst *t);
 static struct bst_node **bst_get_predessor(struct bst *t,
                                            struct bst_node *bstn);
 static void *bst_hlpr_remove_node(struct bst *t,
-                                  struct bst_node *cur,
-                                  struct bst_node **par)
+                                  struct bst_node *cur, struct bst_node **par);
+int bst_hlpr_print(struct bst_node *tree,
+                   int is_left, int offset, int depth, char s[20][255]);
 
 /*
  * Create a binary search tree.
@@ -252,7 +260,34 @@ void bst_destroy(struct bst *t)
 	free(t);
 }
 
-void bst_print(struct bst *t);
+/*
+ * Note: This can only be called for BST with int nodes
+ * TODO: Make it generic
+ *
+ * This is code is taken from stackoverflow with minor modifications. This code
+ * can be found in below url:
+ * http://stackoverflow.com/questions/801740/c-how-to-draw-a-binary-tree-to-the-console
+ * and is NOT copyrighted by Author of this file. So this code can be used only
+ * as allowed by stackoverflow license. Refer to www.stackoverflow.com for
+ * stackoverflow licensing details.
+ */
+void bst_print(struct bst *t)
+{
+    struct bst_node *root;
+
+    root = t->root;
+
+    char s[20][255];
+    for (int i = 0; i < 20; i++)
+        sprintf(s[i], "%80s", " ");
+
+    bst_hlpr_print(root, 0, 0, 0, s);
+
+    printf("\n");
+    for (int i = 0; i < 5; i++)
+        printf("%s\n", s[i]);
+    printf("\n");
+}
 
 /* 
  ******************************************************************************
@@ -447,5 +482,70 @@ static void *bst_hlpr_remove_node(struct bst *t, struct bst_node *cur,
 	free(cur);
 
 	return retval;
+}
+
+/*
+ * This is code is taken from stackoverflow with minor modifications. This code
+ * can be found in below url:
+ * http://stackoverflow.com/questions/801740/c-how-to-draw-a-binary-tree-to-the-console
+ * and is NOT copyrighted by Author of this file. So this code can be used only
+ * as allowed by stackoverflow license. Refer to www.stackoverflow.com for
+ * stackoverflow licensing details.
+ */
+int bst_hlpr_print(struct bst_node *tree,
+                   int is_left, int offset, int depth, char s[20][255])
+{
+    char b[20];
+    int width = 5;
+
+    if (!tree) return 0;
+
+    sprintf(b, "(%03d)", *(int *) tree->val);
+
+    int left  = bst_hlpr_print(tree->left,  1, offset,                depth + 1, s);
+    int right = bst_hlpr_print(tree->right, 0, offset + left + width, depth + 1, s);
+
+#define COMPACT
+#ifdef COMPACT
+    for (int i = 0; i < width; i++)
+        s[depth][offset + left + i] = b[i];
+
+    if (depth && is_left) {
+
+        for (int i = 0; i < width + right; i++)
+            s[depth - 1][offset + left + width/2 + i] = '-';
+
+        s[depth - 1][offset + left + width/2] = '.';
+
+    } else if (depth && !is_left) {
+
+        for (int i = 0; i < left + width; i++)
+            s[depth - 1][offset - width/2 + i] = '-';
+
+        s[depth - 1][offset + left + width/2] = '.';
+    }
+#else
+    for (int i = 0; i < width; i++)
+        s[2 * depth][offset + left + i] = b[i];
+
+    if (depth && is_left) {
+
+        for (int i = 0; i < width + right; i++)
+            s[2 * depth - 1][offset + left + width/2 + i] = '-';
+
+        s[2 * depth - 1][offset + left + width/2] = '+';
+        s[2 * depth - 1][offset + left + width + right + width/2] = '+';
+
+    } else if (depth && !is_left) {
+
+        for (int i = 0; i < left + width; i++)
+            s[2 * depth - 1][offset - width/2 + i] = '-';
+
+        s[2 * depth - 1][offset + left + width/2] = '+';
+        s[2 * depth - 1][offset - width/2 - 1] = '+';
+    }
+#endif
+
+    return left + width + right;
 }
 

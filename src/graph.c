@@ -2,7 +2,7 @@
  * src/graph.c:
  *
  * St: 2016-10-01 Sat 06:24 PM
- * Up: 2016-10-02 Sun 07:39 PM
+ * Up: 2016-10-03 Mon 12:13 AM
  *
  * Author: SPS
  */
@@ -15,6 +15,11 @@
 
 #define SKIP
 
+struct dfs_edge {
+	int u;
+	int v;
+};
+
 /* Function prototype declaration of helper functions */
 static int *conv_label_to_int(struct graph *g, void *label);
 static void *conv_from_int(void *val);
@@ -23,8 +28,11 @@ void *cpy_i(void *src);
 int cmp_i(void *val1, void *val2);
 void printn_i(struct ll_node *lln);
 void dval_i(void *);
-static void bfs_init_search_graph(struct graph *g);
-static void bfs_update_nbrs(struct graph *g, struct queue *q, int *cur);
+static void init_search_graph(struct graph *g);
+static void bfs_process_cur(struct graph *g, struct queue *q, int *cur);
+static void dfs_process_cur(struct graph *g, struct st *st, struct dfs_edge *e);
+static void *dfs_cpy_edge(void *val);
+static void dval_dfs_edge(void *edge);
 
 /*
  * Create a graph.
@@ -226,7 +234,7 @@ int graph_bfs(struct graph *g, void *src, void *dest)
 	struct queue *q;
 
 	/* Initialize search_graph */
-	bfs_init_search_graph(g);
+	init_search_graph(g);
 
 	/* Create queue */
 	q = q_create(cpy_i, cmp_i, NULL);
@@ -245,7 +253,7 @@ int graph_bfs(struct graph *g, void *src, void *dest)
 	/* For each vertex update neighbors */
 	while (!q_is_empty(q)) {
 		cur = q_pop(q);
-		bfs_update_nbrs(g, q, cur);
+		bfs_process_cur(g, q, cur);
 		free(cur);
 	}
 
@@ -257,6 +265,70 @@ int graph_bfs(struct graph *g, void *src, void *dest)
 
 	/* Destroy queue */
 	q_destroy(q);
+
+	/* Destroy search_graph */
+	free(g->search_graph);
+	g->search_graph = NULL;
+
+	return retval;
+}
+
+/*
+ * Depth first search the graph.
+ *
+ * @g:    Pointer to the graph structure
+ * @src:  Pointer to the label of source vertex
+ * @dest: Pointer to the label of destination vertex
+ */
+int graph_dfs(struct graph *g, void *src, void *dest)
+{
+	int i;
+	int retval;
+	int *isrc;
+	int *idest;
+	struct st *st;
+	struct dfs_edge *e;
+	int cur;
+
+	/* Initialize search_graph */
+	init_search_graph(g);
+
+	/* Create stack */
+	st = st_create(dfs_cpy_edge, NULL, dval_dfs_edge, NULL);
+
+	/* Change labels to int equivalent if needed */
+	isrc = conv_label_to_int(g, src);
+	idest = conv_label_to_int(g, dest);
+
+	/* Set par and distance for root (src) */
+	/* g->search_graph[*(int *)isrc].par = *(int *)isrc; */
+	/* g->search_graph[*(int *)isrc].dist = 0; */
+
+	/* Push root (src) to stack */
+	e = malloc(sizeof(struct dfs_edge));
+	assert(e);
+	e->u = *isrc;
+	e->v = *isrc;
+	st_push(st, e);
+	free(e);
+
+	/* For each vertex update neighbors */
+	while (!st_is_empty(st)) {
+		e = st_pop(st);
+		cur = e->v;
+		if (g->search_graph[cur].par == NIL)
+			dfs_process_cur(g, st, e);
+		free(e);
+	}
+
+	/* Check if src and dest are connected */
+	if (g->search_graph[*idest].par != NIL)
+		retval = 1;
+	else 
+		retval = 0;
+
+	/* Destroy queue */
+	st_destroy(st);
 
 	/* Destroy search_graph */
 	free(g->search_graph);
@@ -416,7 +488,7 @@ static int hash_func(struct ht *h, void *key)
  * @g:   Pointer to the graph structure
  * @cur:
  */
-static void bfs_update_nbrs(struct graph *g, struct queue *q, int *cur)
+static void bfs_process_cur(struct graph *g, struct queue *q, int *cur)
 {
 	void *ll_itr;
 	void *nbr_vtx;
@@ -442,11 +514,58 @@ static void bfs_update_nbrs(struct graph *g, struct queue *q, int *cur)
 }
 
 /*
+ * Update the neighbors of a vertex during DFS search.
+ *
+ * @g:   Pointer to the graph structure
+ * @cur:
+ */
+static void dfs_process_cur(struct graph *g, struct st *st, struct dfs_edge *e)
+{
+	int par;
+	int cur;
+	void *ll_itr;
+	void *nbr_vtx;
+	struct dfs_edge *out_edge;
+
+	par = e->u;
+	cur = e->v;
+
+	/* Update distance and parent of cur vertex */
+	g->search_graph[cur].par = par;
+	if (e->v == e->u)
+		g->search_graph[cur].dist = 0;
+	else
+		g->search_graph[cur].dist = g->search_graph[par].dist + 1;
+
+	/*
+	 * foreach adjacent vertex of cur
+	 *     push to stack
+	 */
+
+	ll_itr = ll_first(g->alist[cur]->l);
+
+	while (!ll_done(ll_itr)) {
+		/* Get neighbor */
+		nbr_vtx = ll_next(g->alist[cur]->l, &ll_itr);
+		/* Make an edge */
+		out_edge = malloc(sizeof(struct dfs_edge));
+		assert(out_edge);
+		out_edge->u = cur;
+		out_edge->v = *(int *)nbr_vtx;
+		/* Push edge to stack */
+		st_push(st, out_edge);
+		/* Free temp memory used */
+		free(out_edge);
+		free(nbr_vtx);
+	}
+}
+
+/*
  * Initialize search_graph for BFS search
  *
  * @g: Pointer to the graph structure
  */
-static void bfs_init_search_graph(struct graph *g)
+static void init_search_graph(struct graph *g)
 {
 	int i;
 
@@ -463,4 +582,44 @@ static void bfs_init_search_graph(struct graph *g)
 		g->search_graph[i].dist = INFINITE;
 	}
 }
+
+/*
+ * Copy function for dfs edge.
+ *
+ * @val: Pointer to dfs_edge to copy
+ */
+static void *dfs_cpy_edge(void *val)
+{
+	struct dfs_edge *dfse;
+	struct dfs_edge *retval;
+
+	retval = malloc(sizeof(struct dfs_edge));
+	assert(retval);
+
+	dfse = (struct dfs_edge *) val;
+
+	retval->u =  dfse->u;
+	retval->v =  dfse->v;
+
+	return retval;
+}
+
+/*
+ * Destroy a dfs edge
+ *
+ * @edge: Pointer to the edge structure
+ */
+static void dval_dfs_edge(void *edge)
+{
+	free(edge);
+}
+
+
+/*
+ * Important design TODO:
+ *
+ * 1. Design of conv_to_int. How is the client supposed to use it?
+ *    Issue here is there is no consistency to free-or-not-not-free
+ *    the returned int *.
+ */
 

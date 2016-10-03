@@ -84,6 +84,14 @@ int test_graph_int_has_edge(void)
 	dest = 7;
 	assert(graph_bfs(g, src_ptr, dest_ptr) == 0);
 
+	/* Test graph_dfs_search */
+	src = 2;
+	dest = 6;
+	assert(graph_dfs(g, src_ptr, dest_ptr) == 1);
+
+	src = 2;
+	dest = 7;
+	assert(graph_dfs(g, src_ptr, dest_ptr) == 0);
 
 	/* Destroy the graph */
 	graph_destroy(g);

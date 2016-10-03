@@ -12,7 +12,7 @@ FUNCUTILS_H	test/funcutils.h	5;"	d
 GRAPH_INT	src/mylib.h	357;"	d
 GRAPH_NO_INT	src/mylib.h	358;"	d
 GROWTH_RATE	src/mylib.h	261;"	d
-INFINITE	src/graph.c	210;"	d	file:
+INFINITE	src/graph.c	212;"	d	file:
 INITIAL_INS_COUNT	test/cllTest.c	42;"	d	file:
 INITIAL_INS_COUNT	test/dekTest.c	42;"	d	file:
 INITIAL_INS_COUNT	test/llTest.c	42;"	d	file:
@@ -33,7 +33,7 @@ MAX_HEAP	src/mylib.h	259;"	d
 MAX_NODE_PRINT_LEN	src/mylib.h	333;"	d
 MIN_HEAP	src/mylib.h	258;"	d
 MYLIB_H	src/mylib.h	34;"	d
-NIL	src/graph.c	209;"	d	file:
+NIL	src/graph.c	211;"	d	file:
 PRINT_FILE	src/mylib.h	331;"	d
 PRINT_STDOUT	src/mylib.h	329;"	d
 PRINT_STRING	src/mylib.h	330;"	d
@@ -62,8 +62,7 @@ TEST_ERR	test/stTest.c	41;"	d	file:
 TOT_SLOTS	test/htTest.c	43;"	d	file:
 adjlist	src/mylib.h	/^struct adjlist {$/;"	s
 alist	src/mylib.h	/^	struct adjlist **alist;$/;"	m	struct:graph	typeref:struct:graph::adjlist
-bfs_init_search_graph	src/graph.c	/^static void bfs_init_search_graph(struct graph *g)$/;"	f	file:
-bfs_update_nbrs	src/graph.c	/^static void bfs_update_nbrs(struct graph *g, struct queue *q, int *cur)$/;"	f	file:
+bfs_process_cur	src/graph.c	/^static void bfs_process_cur(struct graph *g, struct queue *q, int *cur)$/;"	f	file:
 bst	src/mylib.h	/^struct bst {$/;"	s
 bst_create	src/bst.c	/^struct bst *bst_create(void *(*cpy)(void *), int (*cmp)(void *, void *),$/;"	f
 bst_delete	src/bst.c	/^void *bst_delete(struct bst *t, void *delval)$/;"	f
@@ -143,6 +142,9 @@ deque_node_create	src/deque.c	/^static struct deque_node *deque_node_create(stru
 deque_pop	src/deque.c	/^void *deque_pop(struct deque *dek, int dir)$/;"	f
 deque_print	src/deque.c	/^void deque_print(struct deque *dek)$/;"	f
 deque_search	src/deque.c	/^int deque_search(struct deque *dek, void *val)$/;"	f
+dfs_cpy_edge	src/graph.c	/^static void *dfs_cpy_edge(void *val)$/;"	f	file:
+dfs_edge	src/graph.c	/^struct dfs_edge {$/;"	s	file:
+dfs_process_cur	src/graph.c	/^static void dfs_process_cur(struct graph *g, struct st *st, int cur)$/;"	f	file:
 dist	src/mylib.h	/^		int dist;$/;"	m	struct:graph::search_node
 dll	src/mylib.h	/^struct dll {$/;"	s
 dll_create	src/doubly_linked_list.c	/^struct dll *dll_create(void *(*cpy)(void *), int (*cmp)(void *, void *),$/;"	f
@@ -176,6 +178,7 @@ graph_add_edge	src/graph.c	/^void graph_add_edge(struct graph *g, void *src, voi
 graph_bfs	src/graph.c	/^int graph_bfs(struct graph *g, void *src, void *dest)$/;"	f
 graph_create	src/graph.c	/^struct graph *graph_create(int nvert, int type)$/;"	f
 graph_destroy	src/graph.c	/^void graph_destroy(struct graph *g)$/;"	f
+graph_dfs	src/graph.c	/^int graph_dfs(struct graph *g, void *src, void *dest)$/;"	f
 graph_has_edge	src/graph.c	/^int graph_has_edge(struct graph *g, void *src, void *dest)$/;"	f
 graph_print	src/graph.c	/^void graph_print(struct graph *g)$/;"	f
 graph_tot_edge	src/graph.c	/^int graph_tot_edge(struct graph *g)$/;"	f
@@ -223,6 +226,7 @@ ht_n_d_encap	src/hash_table.c	/^static struct ht_and_data *ht_n_d_encap(struct h
 ht_print	src/hash_table.c	/^void ht_print(struct ht *h, int type)$/;"	f
 ht_search	src/hash_table.c	/^int ht_search(struct ht *h, void *key)$/;"	f
 iarr_is_sorted	test/hpTest.c	/^int iarr_is_sorted(void **arr, size_t nmemb)$/;"	f
+init_search_graph	src/graph.c	/^static void init_search_graph(struct graph *g)$/;"	f	file:
 is_test_err	test/hpTest.c	/^int is_test_err(struct heap *h)$/;"	f
 is_test_err	test/qTest.c	/^int is_test_err(struct queue *q)$/;"	f
 is_test_err	test/stTest.c	/^int is_test_err(struct st *s)$/;"	f
@@ -400,6 +404,8 @@ test_str_search	test/llTest.c	/^int test_str_search(struct ll *l)$/;"	f
 tot_slots	src/mylib.h	/^	size_t tot_slots;                  \/* total slots in table *\/$/;"	m	struct:ht
 type	src/mylib.h	/^	char type;                    \/* Type of heap (min or max) *\/$/;"	m	struct:heap
 type	src/mylib.h	/^	int type;$/;"	m	struct:graph
+u	src/graph.c	/^	int u;$/;"	m	struct:dfs_edge	file:
+v	src/graph.c	/^	int v;$/;"	m	struct:dfs_edge	file:
 v_cmp	src/mylib.h	/^	int (*v_cmp)(void *, void *);      \/* function to compare vals *\/$/;"	m	struct:ht
 v_cpy	src/mylib.h	/^	void *(*v_cpy) (void *);           \/* function to copy val *\/$/;"	m	struct:ht
 val	src/mylib.h	/^	void *val;$/;"	m	struct:bst_node

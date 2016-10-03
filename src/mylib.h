@@ -1,7 +1,7 @@
 /* mylib.h: Header file (interface) for my C library
  *
  * St: 2016-09-26 Mon 01:47 AM
- * Up: 2016-09-30 Fri 05:07 AM
+ * Up: 2016-10-03 Mon 12:02 AM
  *
  * Author: SPS
  *
@@ -387,6 +387,7 @@ int graph_has_edge(struct graph *g, void *src, void *dest);
 void graph_print(struct graph *g);
 int graph_out_degree(struct graph *g, void *src);
 int graph_bfs(struct graph *g, void *src, void *dest);
+int graph_dfs(struct graph *g, void *src, void *dest);
 
 #endif  /* MYLIB_H */
 

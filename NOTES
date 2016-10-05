@@ -2,7 +2,7 @@ NOTES
 =====
 
 # St: 2016-09-26 Mon 05:10 AM
-# Up: 2016-10-02 Sun 05:35 AM
+# Up: 2016-10-04 Tue 05:21 AM
 
 # No  Data Structure                  Dev Status               Test Status
 ===============================================================================
@@ -40,4 +40,10 @@ Reason: dval functionality was added
 Iterator interface added to:
 
 1. Singly linked-list: Yes
+
+
+2016-10-04 Tue 05:20 AM
+=======================
+Peek functionality added to stack.c and queue.c.
+
 

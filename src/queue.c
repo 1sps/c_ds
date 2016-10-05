@@ -2,7 +2,7 @@
  * q.c:
  *
  * St: 2016-09-26 Mon 06:12 PM
- * Up: 2016-09-26 Mon 08:34 PM
+ * Up: 2016-10-04 Tue 05:17 AM
  *
  * Author: SPS
  *
@@ -233,5 +233,23 @@ void q_print(struct queue *q)
 		}
 		putchar('\n');
 	}
+}
+
+/*
+ * Return value at front of the queue without
+ * removing it
+ *
+ * @q: Pointer to the queue structure
+ */
+void *q_peek(struct queue *q)
+{
+	void *retval;
+
+	retval = NULL;
+
+	if (!q_is_empty(q))
+		retval = q->cpy(q->head->val);
+
+	return retval;
 }
 

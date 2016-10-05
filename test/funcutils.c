@@ -2,7 +2,7 @@
  * test/funcutils.c: Contains utility functions
  *
  * St: 2016-09-26 Mon 06:22 PM
- * Up: 2016-09-27 Tue 05:58 PM
+ * Up: 2016-10-04 Tue 09:40 PM
  *
  * Author: SPS
  */
@@ -18,6 +18,13 @@
 #define SKIP
 
 /*
+ *******************************************************************************
+ * Str Section
+ *******************************************************************************
+ */
+
+
+/*
  * Make a copy of an int 
  *
  * @src: source ; whose copy is to be made
@@ -26,10 +33,8 @@ void *cpy_i(void *src)
 {
 	int *dest; 
 
-	/* TODO: Make this function agnostic of empty src, 
-	 * which means, that the below assert should go away
-	 */
-	assert(src);
+	if (src == NULL)
+		return NULL;
 
 	dest = NULL;
 	dest = malloc(sizeof(int));
@@ -78,6 +83,16 @@ int cmp_i(void *val1, void *val2)
 int get_int_size(void *vptr)
 {
 	return sizeof(int);
+}
+
+/*
+ * Destroy an int allocated in memory
+ *
+ * @ival: Pointer to the int in memory
+ */
+void dval_i(void *ival)
+{
+	free(ival);
 }
 
 /*
@@ -163,6 +178,14 @@ int test_get_size_i(int (*get_key_size)(void *))
 	return 1;
 }
 
+
+/*
+ *******************************************************************************
+ * Str Section
+ *******************************************************************************
+ */
+
+
 /*
  * Make a copy of a string 
  *
@@ -172,10 +195,8 @@ void *cpy_s(void *src)
 {
 	char *dest; 
 
-	/* TODO: Make this function agnostic of empty src, 
-	 * which means, that the below assert should go away
-	 */
-	assert(src);
+	if (src == NULL)
+		return NULL;
 
 	dest = NULL;
 	dest = strdup(src);
@@ -224,6 +245,17 @@ int get_str_size(void *vptr)
 
 	return retval;
 }
+
+/*
+ * Destroy an str allocated in memory
+ *
+ * @ival: Pointer to the str in memory
+ */
+void dval_s(void *sval)
+{
+	free(sval);
+}
+
 
 /*
  * Test correctness of str copy function `cpy'.

@@ -5,14 +5,14 @@
 !_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
 !_TAG_PROGRAM_VERSION	5.8	//
 COMPACT	src/bst.c	508;"	d	file:
-Child	src/mylib.h	264;"	d
-DEQUE_HEAD	src/mylib.h	230;"	d
-DEQUE_TAIL	src/mylib.h	231;"	d
+Child	src/mylib.h	265;"	d
+DEQUE_HEAD	src/mylib.h	231;"	d
+DEQUE_TAIL	src/mylib.h	232;"	d
 FUNCUTILS_H	test/funcutils.h	5;"	d
-GRAPH_INT	src/mylib.h	357;"	d
-GRAPH_NO_INT	src/mylib.h	358;"	d
-GROWTH_RATE	src/mylib.h	261;"	d
-INFINITE	src/graph.c	212;"	d	file:
+GRAPH_INT	src/mylib.h	358;"	d
+GRAPH_NO_INT	src/mylib.h	359;"	d
+GROWTH_RATE	src/mylib.h	262;"	d
+INFINITE	src/graph.c	256;"	d	file:
 INITIAL_INS_COUNT	test/cllTest.c	42;"	d	file:
 INITIAL_INS_COUNT	test/dekTest.c	42;"	d	file:
 INITIAL_INS_COUNT	test/llTest.c	42;"	d	file:
@@ -29,20 +29,20 @@ KSTR_VINT	src/hash_table.c	47;"	d	file:
 KSTR_VINT	test/htTest.c	50;"	d	file:
 KSTR_VSTR	src/hash_table.c	48;"	d	file:
 KSTR_VSTR	test/htTest.c	51;"	d	file:
-MAX_HEAP	src/mylib.h	259;"	d
-MAX_NODE_PRINT_LEN	src/mylib.h	333;"	d
-MIN_HEAP	src/mylib.h	258;"	d
+MAX_HEAP	src/mylib.h	260;"	d
+MAX_NODE_PRINT_LEN	src/mylib.h	334;"	d
+MIN_HEAP	src/mylib.h	259;"	d
 MYLIB_H	src/mylib.h	34;"	d
-NIL	src/graph.c	211;"	d	file:
-PRINT_FILE	src/mylib.h	331;"	d
-PRINT_STDOUT	src/mylib.h	329;"	d
-PRINT_STRING	src/mylib.h	330;"	d
-Parent	src/mylib.h	263;"	d
+NIL	src/graph.c	255;"	d	file:
+PRINT_FILE	src/mylib.h	332;"	d
+PRINT_STDOUT	src/mylib.h	330;"	d
+PRINT_STRING	src/mylib.h	331;"	d
+Parent	src/mylib.h	264;"	d
 SKIP	src/bst.c	46;"	d	file:
 SKIP	src/circular_linked_list.c	17;"	d	file:
 SKIP	src/deque.c	39;"	d	file:
 SKIP	src/doubly_linked_list.c	39;"	d	file:
-SKIP	src/graph.c	16;"	d	file:
+SKIP	src/graph.c	38;"	d	file:
 SKIP	src/hash_table.c	40;"	d	file:
 SKIP	src/heap.c	40;"	d	file:
 SKIP	src/queue.c	39;"	d	file:
@@ -109,6 +109,7 @@ cmp_s	test/dekTest.c	/^int cmp_s(void *str1, void *str2)$/;"	f
 cmp_s	test/funcutils.c	/^int cmp_s(void *str1, void *str2)$/;"	f
 cmp_s	test/llTest.c	/^int cmp_s(void *str1, void *str2)$/;"	f
 cmp_s	test/stTest.c	/^int cmp_s(void *str1, void *str2)$/;"	f
+conv_from_int	src/graph.c	/^static void *conv_from_int(void *val)$/;"	f	file:
 conv_label_to_int	src/graph.c	/^static int *conv_label_to_int(struct graph *g, void *label)$/;"	f	file:
 cpy	src/mylib.h	/^	void *(*cpy)(void *);                 \/* copy function *\/$/;"	m	struct:bst
 cpy	src/mylib.h	/^	void *(*cpy)(void *);                 \/* copy function *\/$/;"	m	struct:deque
@@ -142,10 +143,10 @@ deque_node_create	src/deque.c	/^static struct deque_node *deque_node_create(stru
 deque_pop	src/deque.c	/^void *deque_pop(struct deque *dek, int dir)$/;"	f
 deque_print	src/deque.c	/^void deque_print(struct deque *dek)$/;"	f
 deque_search	src/deque.c	/^int deque_search(struct deque *dek, void *val)$/;"	f
+destroy_iptr	src/graph.c	/^static void destroy_iptr(void *iptr)$/;"	f	file:
 dfs_cpy_edge	src/graph.c	/^static void *dfs_cpy_edge(void *val)$/;"	f	file:
-dfs_edge	src/graph.c	/^struct dfs_edge {$/;"	s	file:
-dfs_process_cur	src/graph.c	/^static void dfs_process_cur(struct graph *g, struct st *st, int cur)$/;"	f	file:
-dist	src/mylib.h	/^		int dist;$/;"	m	struct:graph::search_node
+dfs_process_cur	src/graph.c	/^static void dfs_process_cur(struct graph *g, struct st *st, struct graph_edge *e)$/;"	f	file:
+dist	src/mylib.h	/^		int dist;$/;"	m	struct:graph::search_info_node
 dll	src/mylib.h	/^struct dll {$/;"	s
 dll_create	src/doubly_linked_list.c	/^struct dll *dll_create(void *(*cpy)(void *), int (*cmp)(void *, void *),$/;"	f
 dll_delete	src/doubly_linked_list.c	/^void dll_delete(struct dll *l, void *val)$/;"	f
@@ -177,10 +178,15 @@ graph	src/mylib.h	/^struct graph {$/;"	s
 graph_add_edge	src/graph.c	/^void graph_add_edge(struct graph *g, void *src, void *dest)$/;"	f
 graph_bfs	src/graph.c	/^int graph_bfs(struct graph *g, void *src, void *dest)$/;"	f
 graph_create	src/graph.c	/^struct graph *graph_create(int nvert, int type)$/;"	f
+graph_create_edge	src/graph.c	/^static struct graph_edge *graph_create_edge(int src, int sink)$/;"	f	file:
 graph_destroy	src/graph.c	/^void graph_destroy(struct graph *g)$/;"	f
+graph_destroy_edge	src/graph.c	/^static void graph_destroy_edge(void *edge)$/;"	f	file:
 graph_dfs	src/graph.c	/^int graph_dfs(struct graph *g, void *src, void *dest)$/;"	f
+graph_edge	src/mylib.h	/^struct graph_edge {$/;"	s
 graph_has_edge	src/graph.c	/^int graph_has_edge(struct graph *g, void *src, void *dest)$/;"	f
+graph_out_degree	src/graph.c	/^int graph_out_degree(struct graph *g, void *src)$/;"	f
 graph_print	src/graph.c	/^void graph_print(struct graph *g)$/;"	f
+graph_show_path	src/graph.c	/^char *graph_show_path(struct graph *g, void *src, void *dest)$/;"	f
 graph_tot_edge	src/graph.c	/^int graph_tot_edge(struct graph *g)$/;"	f
 graph_tot_vertex	src/graph.c	/^int graph_tot_vertex(struct graph *g)$/;"	f
 h	src/hash_table.c	/^	struct ht *h;$/;"	m	struct:ht_and_data	typeref:struct:ht_and_data::ht	file:
@@ -195,6 +201,7 @@ head	src/mylib.h	/^	struct q_node *head;               \/* head of the queue *\/
 head	src/mylib.h	/^	struct st_node *head;              \/* head(top) of the stack *\/$/;"	m	struct:st	typeref:struct:st::st_node
 heap	src/mylib.h	/^struct heap {$/;"	s
 hlpr_ht	src/mylib.h	/^struct hlpr_ht {$/;"	s
+hlpr_ht_create	src/graph.c	/^static struct hlpr_ht *hlpr_ht_create(int nvert, int (*get_size)(void *))$/;"	f	file:
 hp_arr_is_sorted	src/heap.c	/^int hp_arr_is_sorted(struct heap *h, void **arr, size_t nmemb)$/;"	f
 hp_copy	src/heap.c	/^static struct heap *hp_copy(struct heap *hsrc) $/;"	f	file:
 hp_create	src/heap.c	/^struct heap *hp_create(size_t cap,$/;"	f
@@ -226,7 +233,7 @@ ht_n_d_encap	src/hash_table.c	/^static struct ht_and_data *ht_n_d_encap(struct h
 ht_print	src/hash_table.c	/^void ht_print(struct ht *h, int type)$/;"	f
 ht_search	src/hash_table.c	/^int ht_search(struct ht *h, void *key)$/;"	f
 iarr_is_sorted	test/hpTest.c	/^int iarr_is_sorted(void **arr, size_t nmemb)$/;"	f
-init_search_graph	src/graph.c	/^static void init_search_graph(struct graph *g)$/;"	f	file:
+init_search_info	src/graph.c	/^static void init_search_info(struct graph *g)$/;"	f	file:
 is_test_err	test/hpTest.c	/^int is_test_err(struct heap *h)$/;"	f
 is_test_err	test/qTest.c	/^int is_test_err(struct queue *q)$/;"	f
 is_test_err	test/stTest.c	/^int is_test_err(struct st *s)$/;"	f
@@ -248,6 +255,7 @@ ll_node	src/mylib.h	/^struct ll_node {$/;"	s
 ll_node_create	src/singly_linked_list.c	/^static struct ll_node *ll_node_create(struct ll *l, void *val)$/;"	f	file:
 ll_print	src/singly_linked_list.c	/^void ll_print(struct ll *l)$/;"	f
 ll_search	src/singly_linked_list.c	/^int ll_search(struct ll *l, void *val)$/;"	f
+ll_tot_memb	src/singly_linked_list.c	/^size_t ll_tot_memb(struct ll *l)$/;"	f
 main	test/bstTest.c	/^int main(void)$/;"	f
 main	test/cllTest.c	/^int main(void)$/;"	f
 main	test/dekTest.c	/^int main(void)$/;"	f
@@ -274,7 +282,7 @@ nmemb	src/mylib.h	/^	size_t nmemb;                      \/* total nodes *\/   $/
 nmemb	src/mylib.h	/^	size_t nmemb;                 \/* Number of members *\/$/;"	m	struct:heap
 nmemb	src/mylib.h	/^	size_t nmemb;$/;"	m	struct:hlpr_ht
 nvert	src/mylib.h	/^	int nvert;$/;"	m	struct:graph
-par	src/mylib.h	/^		int par;$/;"	m	struct:graph::search_node
+par	src/mylib.h	/^		int par;$/;"	m	struct:graph::search_info_node
 prev	src/mylib.h	/^	struct deque_node *prev;$/;"	m	struct:deque_node	typeref:struct:deque_node::deque_node
 prev	src/mylib.h	/^	struct dll_node *prev;$/;"	m	struct:dll_node	typeref:struct:dll_node::dll_node
 print_int_dekn	test/dekTest.c	/^void print_int_dekn(struct deque_node *dekn)$/;"	f
@@ -308,8 +316,10 @@ q_push	src/queue.c	/^void q_push(struct queue *q, void *val)$/;"	f
 queue	src/mylib.h	/^struct queue {$/;"	s
 right	src/mylib.h	/^	struct bst_node *right;$/;"	m	struct:bst_node	typeref:struct:bst_node::bst_node
 root	src/mylib.h	/^	struct bst_node *root; $/;"	m	struct:bst	typeref:struct:bst::bst_node
-search_graph	src/mylib.h	/^	} *search_graph;$/;"	m	struct:graph	typeref:struct:graph::search_node
-search_node	src/mylib.h	/^	struct search_node {$/;"	s	struct:graph
+search_info	src/mylib.h	/^	} *search_info;$/;"	m	struct:graph	typeref:struct:graph::search_info_node
+search_info_node	src/mylib.h	/^	struct search_info_node {$/;"	s	struct:graph
+sink	src/mylib.h	/^	int sink;$/;"	m	struct:graph_edge
+src	src/mylib.h	/^	int src;$/;"	m	struct:graph_edge
 st	src/mylib.h	/^struct st {$/;"	s
 st_create	src/stack.c	/^struct st *st_create(void *(*cpy)(void *),$/;"	f
 st_destroy	src/stack.c	/^void st_destroy(struct st *s)$/;"	f
@@ -404,8 +414,6 @@ test_str_search	test/llTest.c	/^int test_str_search(struct ll *l)$/;"	f
 tot_slots	src/mylib.h	/^	size_t tot_slots;                  \/* total slots in table *\/$/;"	m	struct:ht
 type	src/mylib.h	/^	char type;                    \/* Type of heap (min or max) *\/$/;"	m	struct:heap
 type	src/mylib.h	/^	int type;$/;"	m	struct:graph
-u	src/graph.c	/^	int u;$/;"	m	struct:dfs_edge	file:
-v	src/graph.c	/^	int v;$/;"	m	struct:dfs_edge	file:
 v_cmp	src/mylib.h	/^	int (*v_cmp)(void *, void *);      \/* function to compare vals *\/$/;"	m	struct:ht
 v_cpy	src/mylib.h	/^	void *(*v_cpy) (void *);           \/* function to copy val *\/$/;"	m	struct:ht
 val	src/mylib.h	/^	void *val;$/;"	m	struct:bst_node
@@ -416,4 +424,4 @@ val	src/mylib.h	/^	void *val;$/;"	m	struct:ht_data
 val	src/mylib.h	/^	void *val;$/;"	m	struct:ll_node
 val	src/mylib.h	/^	void *val;$/;"	m	struct:q_node
 val	src/mylib.h	/^	void *val;$/;"	m	struct:st_node
-vtx	src/mylib.h	/^		int vtx;$/;"	m	struct:graph::search_node
+vtx	src/mylib.h	/^		int vtx;$/;"	m	struct:graph::search_info_node

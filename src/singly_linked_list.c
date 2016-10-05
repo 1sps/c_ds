@@ -2,7 +2,7 @@
  * ll.c:
  *
  * St: 2016-09-26 Mon 01:58 AM
- * Up: 2016-09-26 Mon 05:26 AM
+ * Up: 2016-10-03 Mon 02:22 AM
  *
  * Author: SPS
  *
@@ -299,4 +299,13 @@ int ll_done(void *itr)
 	return retval;
 }
 
+/*
+ * Return the total members count
+ *
+ * @l: Pointer to the linked list structure
+ */
+size_t ll_tot_memb(struct ll *l)
+{
+	return l->nmemb;
+}
 

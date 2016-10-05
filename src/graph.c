@@ -2,37 +2,61 @@
  * src/graph.c:
  *
  * St: 2016-10-01 Sat 06:24 PM
- * Up: 2016-10-03 Mon 12:13 AM
+ * Up: 2016-10-05 Wed 01:47 AM
  *
  * Author: SPS
+ * 
+ * Permission is hereby granted, free of charge, to any person
+ * obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without
+ * restriction, including without limitation the rights to use,
+ * copy, modify, merge, publish, distribute, sublicense, and/or
+ * sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following
+ * conditions:
+ * 
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+ * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT.  IN NO EVENT SHALL SPS BE LIABLE FOR
+ * ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF
+ * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE. 
  */
 
 #include<stdio.h>
 #include<stdlib.h>
+#include<string.h>
 #include<assert.h>
 
 #include"mylib.h"
 
 #define SKIP
 
-struct dfs_edge {
-	int u;
-	int v;
-};
-
 /* Function prototype declaration of helper functions */
 static int *conv_label_to_int(struct graph *g, void *label);
-static void *conv_from_int(void *val);
-static struct hlpr_ht *hlpr_ht_create(int nvert, int (*get_size)(void *));
 void *cpy_i(void *src);
 int cmp_i(void *val1, void *val2);
 void printn_i(struct ll_node *lln);
 void dval_i(void *);
-static void init_search_graph(struct graph *g);
-static void bfs_process_cur(struct graph *g, struct queue *q, int *cur);
-static void dfs_process_cur(struct graph *g, struct st *st, struct dfs_edge *e);
+static struct search_vtx_info *init_search_info(struct graph *g);
+static void bfs_process_cur(struct graph *g, struct queue *q, int *cur,
+                            struct search_vtx_info *search_info);
+static void dfs_process_cur(struct graph *g,
+                            struct st *st, struct graph_edge *e,
+                            struct search_vtx_info *search_info);
 static void *dfs_cpy_edge(void *val);
-static void dval_dfs_edge(void *edge);
+static void graph_destroy_edge(void *edge);
+static struct graph_edge *graph_create_edge(int src, int sink);
+static void init_priq(struct graph *g, struct heap *priq, int src);
+void djk_relax(struct hp_data *par, int vtx, struct heap *priq);
+void release_dijkstra_search_setup(struct heap *priq, int *visited, int *dist);
+void init_dijkstra_search(struct graph *g, struct heap **priqp,
+                          int **visitedp, int **distp, int src);
 
 /*
  * Create a graph.
@@ -49,13 +73,13 @@ struct graph *graph_create(int nvert, int type)
 	assert(g);
 
 	/* Allocate memory for adjacency list */
-	g->alist = malloc(sizeof(struct adjlist*) * nvert);
+	g->alist = malloc(sizeof(struct successors *) * nvert);
 	assert(g->alist);
 
 	/* Allocate memory for sucessors list for each vertex */
 	for (i = 0; i < nvert; i++) {
 		/* Memory for sucessor list metadata */
-		g->alist[i] = malloc(sizeof(struct adjlist));
+		g->alist[i] = malloc(sizeof(struct successors));
 		assert(g->alist[i]);
 
 		/* Create the sucessor list */
@@ -66,12 +90,6 @@ struct graph *graph_create(int nvert, int type)
 	g->nvert = nvert;
 	g->type = type;
 	g->nedge = 0;
-
-	/*
-	 * Search graph will be created later when
-	 * a search is done in graph
-	 */
-	g->search_graph = NULL;
 
 	/*
 	 * TODO: Create a preprocessing structure
@@ -96,9 +114,6 @@ void graph_destroy(struct graph *g)
 		ll_destroy(g->alist[i]->l);
 		free(g->alist[i]);
 	}
-
-	/* Free any memory occupied by search graph */
-	free(g->search_graph);
 
 	/* Free memory occupied by alist */
 	free(g->alist);
@@ -168,6 +183,25 @@ int graph_tot_edge(struct graph *g)
 }
 
 /*
+ * Get the out degree of a vertex
+ *
+ * @g:   Pointer to the graph structure
+ * @src: Vertex whose out degree is to be returned
+ */
+int graph_out_degree(struct graph *g, void *src)
+{
+	int *isrc;
+	int retval;
+
+	/* Convert label to int if needed */
+	isrc = conv_label_to_int(g, src);
+
+	retval = g->alist[*isrc]->l->nmemb;
+
+	return retval;
+}
+
+/*
  * Check if graph contains an edge. 
  *
  * @g:    Pointer to graph structure
@@ -176,19 +210,19 @@ int graph_tot_edge(struct graph *g)
  */
 int graph_has_edge(struct graph *g, void *src, void *dest)
 {
-	int isrc;
-	int idest;
+	int *isrc;
+	int *idest;
 	int retval;
 
 	/* Assume no edge */
 	retval = 0;
 
 	/* Convert labels to int if needed */
-	isrc = *conv_label_to_int(g, src);
-	idest = *conv_label_to_int(g, dest);
+	isrc = conv_label_to_int(g, src);
+	idest = conv_label_to_int(g, dest);
 
 	/* Search for the edge */
-	retval = ll_search(g->alist[isrc]->l, dest);
+	retval = ll_search(g->alist[*isrc]->l, idest);
 
 	return retval;
 }
@@ -226,15 +260,15 @@ void graph_print(struct graph *g)
  */
 int graph_bfs(struct graph *g, void *src, void *dest)
 {
-	int i;
 	int *cur;
 	int retval;
 	void *isrc;
 	void *idest;
 	struct queue *q;
+	struct search_vtx_info *search_info;
 
-	/* Initialize search_graph */
-	init_search_graph(g);
+	/* Initialize search_info */
+	search_info = init_search_info(g);
 
 	/* Create queue */
 	q = q_create(cpy_i, cmp_i, NULL);
@@ -244,8 +278,8 @@ int graph_bfs(struct graph *g, void *src, void *dest)
 	idest = conv_label_to_int(g, dest);
 
 	/* Set par and distance for root (src) */
-	g->search_graph[*(int *)isrc].par = *(int *)isrc;
-	g->search_graph[*(int *)isrc].dist = 0;
+	search_info[*(int *)isrc].par = *(int *)isrc;
+	search_info[*(int *)isrc].dist = 0;
 
 	/* Enqueue root (src) */
 	q_push(q, isrc);
@@ -253,12 +287,12 @@ int graph_bfs(struct graph *g, void *src, void *dest)
 	/* For each vertex update neighbors */
 	while (!q_is_empty(q)) {
 		cur = q_pop(q);
-		bfs_process_cur(g, q, cur);
+		bfs_process_cur(g, q, cur, search_info);
 		free(cur);
 	}
 
 	/* Check if src and dest are connected */
-	if (g->search_graph[*(int *)idest].par != NIL)
+	if (search_info[*(int *)idest].par != NIL)
 		retval = 1;
 	else 
 		retval = 0;
@@ -266,9 +300,9 @@ int graph_bfs(struct graph *g, void *src, void *dest)
 	/* Destroy queue */
 	q_destroy(q);
 
-	/* Destroy search_graph */
-	free(g->search_graph);
-	g->search_graph = NULL;
+	/* Destroy search_info */
+	free(search_info);
+	search_info = NULL;
 
 	return retval;
 }
@@ -282,61 +316,129 @@ int graph_bfs(struct graph *g, void *src, void *dest)
  */
 int graph_dfs(struct graph *g, void *src, void *dest)
 {
-	int i;
 	int retval;
 	int *isrc;
 	int *idest;
 	struct st *st;
-	struct dfs_edge *e;
-	int cur;
+	struct graph_edge *edge;
+	int cur_vtx;
+	struct search_vtx_info *search_info;
 
-	/* Initialize search_graph */
-	init_search_graph(g);
+	/* Initialize search_info */
+	search_info = init_search_info(g);
 
 	/* Create stack */
-	st = st_create(dfs_cpy_edge, NULL, dval_dfs_edge, NULL);
+	st = st_create(dfs_cpy_edge, NULL, graph_destroy_edge, NULL);
 
 	/* Change labels to int equivalent if needed */
 	isrc = conv_label_to_int(g, src);
 	idest = conv_label_to_int(g, dest);
 
-	/* Set par and distance for root (src) */
-	/* g->search_graph[*(int *)isrc].par = *(int *)isrc; */
-	/* g->search_graph[*(int *)isrc].dist = 0; */
+	/* Push edge (from src to src) to stack */
+	edge = graph_create_edge(*isrc, *isrc);
+	st_push(st, edge);
+	free(edge);
 
-	/* Push root (src) to stack */
-	e = malloc(sizeof(struct dfs_edge));
-	assert(e);
-	e->u = *isrc;
-	e->v = *isrc;
-	st_push(st, e);
-	free(e);
-
-	/* For each vertex update neighbors */
+	/* Visit each vertex */
 	while (!st_is_empty(st)) {
-		e = st_pop(st);
-		cur = e->v;
-		if (g->search_graph[cur].par == NIL)
-			dfs_process_cur(g, st, e);
-		free(e);
+		edge = st_pop(st);
+		cur_vtx = edge->sink;
+		if (search_info[cur_vtx].par == NIL)
+		/* If cur vertex not visited */
+			dfs_process_cur(g, st, edge, search_info);
+		free(edge);
 	}
 
 	/* Check if src and dest are connected */
-	if (g->search_graph[*idest].par != NIL)
+	if (search_info[*idest].par != NIL)
 		retval = 1;
 	else 
 		retval = 0;
 
-	/* Destroy queue */
+	/* Destroy stack */
 	st_destroy(st);
 
-	/* Destroy search_graph */
-	free(g->search_graph);
-	g->search_graph = NULL;
+	/* Destroy search_info */
+	free(search_info);
+	search_info = NULL;
 
 	return retval;
 }
 
+/*
+ * Show a path between src and dest vertex.
+ *
+ * @g:    Pointer to the graph structure
+ * @src:  Sourve vertex
+ * @dest: Destination vertex
+ */
+char *graph_show_path(struct graph *g, void *src, void *dest)
+{
+	/* TODO */
+	return NULL;
+}
+
+/* Infinity for Dijkstra search distance */
+#define DJK_INF 100000
+
+/*
+ * Dijkstra shortest path first search
+ *
+ * @g:    Pointer to the graph structure
+ * @src:  Pointer to source vertex
+ * @dest: Pointer to destination vertex 
+ */
+int graph_dijkstra(struct graph *g, void *src, void *dest)
+{
+	int retval;
+	int *isrc;
+	int *idest;
+	int *nbr_vtx;
+	struct heap *priq;
+	int *visited;
+	int *dist;
+	void *ll_itr;
+	struct hp_data *cur;
+
+	/* Change labels to int equivalent if needed */
+	isrc = conv_label_to_int(g, src);
+	idest = conv_label_to_int(g, dest);
+
+	/* Initialise dijkstra search setup */
+	init_dijkstra_search(g, &priq, &visited, &dist, *isrc);
+
+	/* While queue is not empty */
+	while (!hp_is_empty(priq)) {
+		/* Get node with min dist in priq */
+		cur = hp_extract_m(priq);
+		/* Mark it as visited */
+		visited[*(int *)cur->val] = 1;
+		/* Record its distance - it is the minimum distance */
+		if (*(int *)cur->key != DJK_INF)
+			dist[*(int *)cur->val] = *(int *)cur->key;
+
+		/* for all neighbors of cur */
+		ll_itr = ll_first(g->alist[*(int *)cur->val]->l);
+		while (!ll_done(ll_itr)) {
+			nbr_vtx = ll_next(g->alist[*(int *)cur->val]->l, &ll_itr);
+			/* if not already visited */
+			if (visited[*(int *)nbr_vtx] == 0)
+				djk_relax(cur, *(int *)nbr_vtx, priq);
+			free(nbr_vtx); 
+		}
+		dval_i(cur->val);
+		dval_i(cur->key);
+		free(cur);
+	}
+
+	/* Update retval to show distance */
+	retval = dist[*idest];
+
+	/* Destroy memory of helper structures */
+	release_dijkstra_search_setup(priq, visited, dist);
+
+	return retval;
+}
 
 /*
  *******************************************************************************
@@ -448,47 +550,13 @@ static int *conv_label_to_int(struct graph *g, void *label)
 }
 
 /*
- * Hash function.
- *
- * @h:   Pointer to the hash table structure. This is needed
- *       because it has pointer to the function to get the 
- *       key size. TODO: Change design where passing of hash
- *       table structure is not needed.
- *
- * @key: Key whose hash value is to be calculated
- */
-static int hash_func(struct ht *h, void *key)
-{
-	int i;
-	int hash_val;
-	int key_size;
-	char *key_char;
-
-	key_size = h->get_key_size(key);
-	key_char = (char *) key;
-
-	hash_val = 0;
-
-	/*
-	 * TODO: Is it better not to do a modulo divisin with
-	 * h->tot_slots here and do it in the caller instead? 
-	 */
-
-	for (i = 0; i < key_size; i++) {
-		hash_val += ((*key_char) * 31) % h->tot_slots;
-		key_char++;
-	}
-
-	return hash_val % h->tot_slots;
-}
-
-/*
  * Update the neighbors of a vertex during BFS search.
  *
  * @g:   Pointer to the graph structure
  * @cur:
  */
-static void bfs_process_cur(struct graph *g, struct queue *q, int *cur)
+static void bfs_process_cur(struct graph *g, struct queue *q, int *cur,
+                            struct search_vtx_info *search_info)
 {
 	void *ll_itr;
 	void *nbr_vtx;
@@ -503,10 +571,10 @@ static void bfs_process_cur(struct graph *g, struct queue *q, int *cur)
 
 	while (!ll_done(ll_itr)) {
 		nbr_vtx = ll_next(g->alist[*cur]->l, &ll_itr);
-		if (g->search_graph[*(int *)nbr_vtx].par == NIL) {
-			g->search_graph[*(int *)nbr_vtx].par = *cur;
-			g->search_graph[*(int *)nbr_vtx].dist =
-				       g->search_graph[*cur].dist + 1;
+		if (search_info[*(int *)nbr_vtx].par == NIL) {
+			search_info[*(int *)nbr_vtx].par = *cur;
+			search_info[*(int *)nbr_vtx].dist =
+			             search_info[*cur].dist + 1;
 			q_push(q, nbr_vtx);
 		}
 		free(nbr_vtx);
@@ -519,27 +587,28 @@ static void bfs_process_cur(struct graph *g, struct queue *q, int *cur)
  * @g:   Pointer to the graph structure
  * @cur:
  */
-static void dfs_process_cur(struct graph *g, struct st *st, struct dfs_edge *e)
+static void dfs_process_cur(struct graph *g,
+                            struct st *st, struct graph_edge *e,
+                            struct search_vtx_info *search_info)
 {
 	int par;
 	int cur;
 	void *ll_itr;
 	void *nbr_vtx;
-	struct dfs_edge *out_edge;
+	struct graph_edge *out_edge;
 
-	par = e->u;
-	cur = e->v;
+	par = e->src;
+	cur = e->sink;
 
 	/* Update distance and parent of cur vertex */
-	g->search_graph[cur].par = par;
-	if (e->v == e->u)
-		g->search_graph[cur].dist = 0;
+	search_info[cur].par = par;
+	if (e->sink == e->src)
+		search_info[cur].dist = 0;
 	else
-		g->search_graph[cur].dist = g->search_graph[par].dist + 1;
+		search_info[cur].dist = search_info[par].dist + 1;
 
 	/*
-	 * foreach adjacent vertex of cur
-	 *     push to stack
+	 * Push each outgoing edge (from cur vertex) to stack
 	 */
 
 	ll_itr = ll_first(g->alist[cur]->l);
@@ -548,10 +617,7 @@ static void dfs_process_cur(struct graph *g, struct st *st, struct dfs_edge *e)
 		/* Get neighbor */
 		nbr_vtx = ll_next(g->alist[cur]->l, &ll_itr);
 		/* Make an edge */
-		out_edge = malloc(sizeof(struct dfs_edge));
-		assert(out_edge);
-		out_edge->u = cur;
-		out_edge->v = *(int *)nbr_vtx;
+		out_edge = graph_create_edge(cur, *(int *)nbr_vtx);
 		/* Push edge to stack */
 		st_push(st, out_edge);
 		/* Free temp memory used */
@@ -561,57 +627,183 @@ static void dfs_process_cur(struct graph *g, struct st *st, struct dfs_edge *e)
 }
 
 /*
- * Initialize search_graph for BFS search
+ * Initialize search_info for BFS search
  *
  * @g: Pointer to the graph structure
  */
-static void init_search_graph(struct graph *g)
+static struct search_vtx_info *init_search_info(struct graph *g)
 {
 	int i;
+	struct search_vtx_info *search_info;
 
-	/* Allocate space for search_graph if needed */
-	if (g->search_graph == NULL) {
-		g->search_graph = malloc(sizeof(struct search_node) * g->nvert);
-		assert(g->search_graph);
-	}
+	/* Allocate space for search_info if needed */
+	search_info = malloc(sizeof(struct search_vtx_info) * g->nvert);
+	assert(search_info);
 
 	/* Initially all node is unreachable */
 	for (i = 0; i < g->nvert; i++) {
-		g->search_graph[i].vtx = i;
-		g->search_graph[i].par = NIL;
-		g->search_graph[i].dist = INFINITE;
+		search_info[i].vtx = i;
+		search_info[i].par = NIL;
+		search_info[i].dist = INFINITE;
 	}
+
+	return search_info;
 }
 
 /*
  * Copy function for dfs edge.
  *
- * @val: Pointer to dfs_edge to copy
+ * @val: Pointer to graph_edge to copy
  */
 static void *dfs_cpy_edge(void *val)
 {
-	struct dfs_edge *dfse;
-	struct dfs_edge *retval;
+	struct graph_edge *dfse;
+	struct graph_edge *retval;
 
-	retval = malloc(sizeof(struct dfs_edge));
+	retval = malloc(sizeof(struct graph_edge));
 	assert(retval);
 
-	dfse = (struct dfs_edge *) val;
+	dfse = (struct graph_edge *) val;
 
-	retval->u =  dfse->u;
-	retval->v =  dfse->v;
+	retval->src =  dfse->src;
+	retval->sink =  dfse->sink;
 
 	return retval;
 }
 
 /*
- * Destroy a dfs edge
+ * Create an edge
+ *
+ * @src:  Vertex one of edge
+ * @sink: Vertex two of edge
+ */
+static struct graph_edge *graph_create_edge(int src, int sink)
+{
+	struct graph_edge *edge;
+
+	edge = malloc(sizeof(struct graph_edge));
+	assert(edge);
+
+	edge->src = src;
+	edge->sink = sink;
+
+	return edge;
+}
+
+/*
+ * Destroy an edge
  *
  * @edge: Pointer to the edge structure
  */
-static void dval_dfs_edge(void *edge)
+static void graph_destroy_edge(void *edge)
 {
 	free(edge);
+}
+
+/*
+ * Initialize necessary setup for dijkstra search.
+ *
+ * @priqp:    Pointer to the priority queue structure pointer
+ * @visitedp: Pointer to visited array
+ * @distp:    Pointer to distance array
+ */
+void init_dijkstra_search(struct graph *g, struct heap **priqp,
+                          int **visitedp, int **distp, int src)
+{
+	int i;
+
+	/* Create and initialize priority queue */
+	*priqp = hp_create(g->nvert, MIN_HEAP,
+			   cpy_i, cpy_i, cmp_i, cmp_i, dval_i, dval_i);
+	init_priq(g, *priqp, src);
+
+	/* Create and initiallize visited array */
+	*visitedp = calloc(g->nvert , sizeof(int));
+	assert(*visitedp);
+
+	/* Create and initiallize distance array */
+	*distp = malloc(g->nvert * sizeof(int));
+	assert(*distp);
+	for (i = 0; i < g->nvert; i++)
+		(*distp)[i] = -1;
+}
+
+/*
+ * Release memory occupied by helper structures for dijkstra search.
+ *
+ * @priq:    Pointer to the helper priority queue
+ * @visited: Pointer to visited array
+ * @dist:    Pointer to distance array
+ */
+void release_dijkstra_search_setup(struct heap *priq, int *visited, int *dist)
+{
+	hp_destroy(priq);
+	free(visited);
+	free(dist);
+}
+
+/*
+ * Relax for a node during djkstra search.
+ *
+ * @par:  Pointer to Parent vertex priq_node
+ * @vtx:  Cur vertex for which relaxation is needed 
+ * @priq: Pointer to priority queue structure
+ */
+void djk_relax(struct hp_data *par, int vtx, struct heap *priq)
+{
+	int idx;
+	int old_dist;
+	int new_dist;
+
+	/* Get the index of node in priq heap */
+	idx = hp_get_index_val(priq, &vtx);
+
+	/* Get old distance and new distance */
+	old_dist = *(int *)(priq->hparr[idx]->key);
+	new_dist = *(int *)par->key + 1;
+
+	/* Check if new distance is shorter */
+	if (new_dist < old_dist)
+		/* if yes call hp_decrease_key to update distance */
+		hp_decrease_key(priq, idx, &new_dist);
+}
+
+
+/*
+ * Initialize priority queue for Dijkstras search
+ *
+ * @g:    Pointer to the graph structure
+ * @priq: Pointer to priority queue
+ * @src:  Source vertex for search 
+ */
+static void init_priq(struct graph *g, struct heap *priq, int src)
+{
+	int i;
+	int key;
+	int val;
+
+	/*
+	 * Put each vertex into queue
+	 */
+
+	/* All vertex whose vtx num is less than src */
+	for (i = 0; i < src; i++) {
+		val = i;
+		key = DJK_INF;
+		hp_insert(priq, &key, &val);
+	}
+
+	/* Src vertex */
+	val = src;
+	key = 0;
+	hp_insert(priq, &key, &val);
+
+	/* All vertex whose vtx num is more than src */
+	for (i = 0; i < g->nvert; i++) {
+		val = i;
+		key = DJK_INF;
+		hp_insert(priq, &key, &val);
+	}
 }
 
 

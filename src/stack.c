@@ -2,7 +2,7 @@
  * st.c: Stack implementation
  *
  * St: 2016-09-26 Mon 03:21 PM
- * Up: 2016-09-29 Thu 05:26 AM
+ * Up: 2016-10-04 Tue 05:17 AM
  *
  * Author: SPS
  *
@@ -206,5 +206,24 @@ void st_print(struct st *s)
 		}
 		putchar('\n');
 	}
+}
+
+
+/*
+ * Return the value at top of stack without
+ * popping it.
+ *
+ * @s: Pointer to the stack structure
+ */
+void *st_peek(struct st *s)
+{
+	void *retval;
+
+	retval = NULL;
+
+	if (!st_is_empty(s))
+		retval = s->cpy(s->head->val);
+
+	return retval;
 }
 

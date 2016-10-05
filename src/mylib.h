@@ -1,7 +1,7 @@
 /* mylib.h: Header file (interface) for my C library
  *
  * St: 2016-09-26 Mon 01:47 AM
- * Up: 2016-10-03 Mon 12:02 AM
+ * Up: 2016-10-04 Tue 01:41 PM
  *
  * Author: SPS
  *
@@ -73,6 +73,7 @@ int ll_is_empty(struct ll *l);
 void* ll_first(struct ll *l);
 void* ll_next(struct ll *l, void **itrp);
 int ll_done(void *itr);
+size_t ll_tot_memb(struct ll *l);
 
 
 /*
@@ -102,6 +103,7 @@ void *st_pop(struct st *s);
 void st_destroy(struct st *s);
 int st_is_empty(struct st *s);
 void st_print(struct st *s);
+void *st_peek(struct st *s);
 
 
 /*
@@ -131,6 +133,7 @@ void *q_pop(struct queue *q);
 void q_destroy(struct queue *q);
 int q_is_empty(struct queue *q);
 void q_print(struct queue *q);
+void *q_peek(struct queue *q);
 
 /* 
  * Circular linked list stuff 
@@ -246,13 +249,22 @@ void deque_print(struct deque *dek);
  * Heap stuff
  */
 
+struct hp_data {
+	void *key;
+	void *val;
+};
+
 struct heap {
-	void **hparr;                 /* Array representing heap */
-	char type;                    /* Type of heap (min or max) */
-	size_t nmemb;                 /* Number of members */
-	size_t cap;                   /* Capacity -> max nmemb */
-	void *(*cpy)(void *);         /* Copy funciton */
-	int (*cmp)(void *, void *);   /* Compare funciton */
+	struct hp_data **hparr;         /* Array representing heap */
+	char type;                      /* Type of heap (min or max) */
+	size_t nmemb;                   /* Number of members */
+	size_t cap;                     /* Capacity -> max nmemb */
+	void *(*k_cpy)(void *);         /* Key Copy funciton */
+	void *(*v_cpy)(void *);         /* Value Copy funciton */
+	int (*k_cmp)(void *, void *);   /* Key Compare funciton */
+	int (*v_cmp)(void *, void *);   /* Value Compare funciton */
+	void (*k_dval)(void *);         /* Key destroy function */  
+	void (*v_dval)(void *);         /* Value destroly function */   
 };
 
 #define MIN_HEAP 1
@@ -264,17 +276,26 @@ struct heap {
 #define Child(x, dir)  (2 * (x) + 1 + (dir))
 
 /* Heap functions */
-struct heap *hp_create(size_t cap, char type, void *(*cpy)(void *),
-		       int (*cmp)(void *, void *));
-void hp_insert(struct heap *h, void *val);
+struct heap *hp_create(size_t cap, char type,
+                       void *(*k_cpy)(void *),
+                       void *(*v_cpy)(void *),
+		       int (*k_cmp)(void *, void *),
+		       int (*v_cmp)(void *, void *),
+		       void (*k_dval)(void *),
+		       void (*v_dval)(void *));
+void hp_insert(struct heap *h, void *k_val, void *v_val);
 void *hp_extract_m(struct heap *h);
 void *hp_find_m(struct heap *h);
 void hp_destroy(struct heap *h);
 int hp_is_empty(struct heap *h);
 size_t hp_get_size(struct heap *h);
 void hp_print(struct heap *h);
-void **get_sorted_arr(struct heap *h);
-int hp_arr_is_sorted(struct heap *h, void **arr, size_t nmemb);
+struct hp_data **get_sorted_arr(struct heap *h);
+int hp_arr_is_sorted(struct heap *h, struct hp_data **arr, size_t nmemb);
+int hp_get_index(struct heap *h, void *val);
+void hp_decrease_key(struct heap *h, int pos, void *newval);
+int hp_get_index_key(struct heap *h, void *key);
+int hp_get_index_val(struct heap *h, void *val);
 
 /*
  * Hash Table Stuff
@@ -346,35 +367,39 @@ void bst_print(struct bst *t);
  * Graph stuff 
  */
 
-/* Hash table for preprocessing */
-struct hlpr_ht {
-	int *table;
-	size_t nmemb;
-	size_t cap;
-	int (*get_size)(void *);
-};
-
 #define GRAPH_INT    100
 #define GRAPH_NO_INT 101
 
-struct adjlist {
+/* Edge of a graph */
+struct graph_edge {
+	int src;
+	int sink;
+};
+
+/* Sucessors info for a vertex  */
+struct successors {
 	struct ll *l;
+};
+
+/* Vertex info BFS/DFS search */
+struct search_vtx_info {
+	int vtx;      /* vertex num */
+	int par;      /* parent vertex */
+	int dist;     /* distance from src vertex */
+};
+
+/* Structure for a node in dijkstra search priority queue */
+struct djk_priq_node {
+		int vtx;       /* vertex num */
+		int dist;      /* distance from src vertex */
 };
 
 /* Graph structure */
 struct graph {
 	int type;
-	/* struct hlpr_ht *ht; */
 	int nvert;
 	int nedge;
-	struct adjlist **alist;
-
-	/* For BFS/DFS search */
-	struct search_node {
-		int vtx;
-		int par;
-		int dist;
-	} *search_graph;
+	struct successors **alist;
 };
 
 /* Graph functions */
@@ -383,11 +408,15 @@ void graph_destroy(struct graph *g);
 void graph_add_edge(struct graph *g, void *src, void *dest);
 int graph_tot_vertex(struct graph *g);
 int graph_tot_edge(struct graph *g);
+int graph_out_degree(struct graph *g, void *src);
 int graph_has_edge(struct graph *g, void *src, void *dest);
 void graph_print(struct graph *g);
-int graph_out_degree(struct graph *g, void *src);
 int graph_bfs(struct graph *g, void *src, void *dest);
 int graph_dfs(struct graph *g, void *src, void *dest);
+/* TODO */
+char *graph_show_path(struct graph *g, void *src, void *dest);
+int graph_dijkstra(struct graph *g, void *src, void *dest);
+
 
 #endif  /* MYLIB_H */
 

@@ -13,13 +13,12 @@
 #include<assert.h>
 
 #include "funcutils.h"
-#include "../src/mylib.h"
 
 #define SKIP
 
 /*
  *******************************************************************************
- * Str Section
+ * Int Section
  *******************************************************************************
  */
 
@@ -177,6 +176,18 @@ int test_get_size_i(int (*get_key_size)(void *))
 
 	return 1;
 }
+
+#ifndef SKIP
+/*
+ * Print an int data 
+ *
+ * @data: Pointer to data to print
+ */
+void printn_i(void *data)
+{
+	printf("%d, ", *(int *) data);
+}
+#endif /* SKIP */
 
 
 /*
@@ -339,4 +350,16 @@ int test_get_size_s(int (*get_key_size)(void *))
 
 	return 1;
 }
+
+#ifndef SKIP
+/*
+ * Print an str data 
+ *
+ * @data: Pointer to data print
+ */
+void printn_s(void *data)
+{
+	printf("%s, ", (char *) data);
+}
+#endif /* SKIP */
 

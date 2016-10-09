@@ -17,6 +17,7 @@ int test_cpy_i(void *(*cpy)(void *));
 int test_cmp_i(int (*cmp)(void *, void *));
 int test_get_size_i(int (*get_key_size)(void *));
 void dval_i(void *ival);
+/* void printn_i(void *); */
 
 /* Str functions */
 void *cpy_s(void *src);
@@ -26,6 +27,7 @@ int test_cpy_s(void *(*cpy)(void *));
 int test_cmp_s(int (*cmp)(void *, void *));
 int test_get_size_s(int (*get_key_size)(void *));
 void dval_s(void *sval);
+/* void printn_s(void *); */
 
 #endif /* FUNCUTILS_H */
 

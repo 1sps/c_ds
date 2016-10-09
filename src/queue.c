@@ -47,13 +47,10 @@
  */
 struct queue *q_create(void *(*cpy)(void *), 
                        int (*cmp)(void *, void *),
+		       void (*dval) (void *),
 		       void (*printn)(struct q_node *))
 {
 	struct queue *q;
-
-	/* TODO: Is this really needed? */
-	assert(cpy);
-	assert(cmp);
 
 	q = malloc(sizeof(struct queue));
 	assert(q);
@@ -62,6 +59,7 @@ struct queue *q_create(void *(*cpy)(void *),
 	q->tail = NULL;
 	q->cpy = cpy;
 	q->cmp = cmp;
+	q->dval = dval;
 	q->printn = printn;
 	q->nmemb = 0;
 
@@ -159,7 +157,8 @@ void *q_pop(struct queue *q)
 		if (q->head == NULL) 
 			q->tail = NULL;
 		retval = q->cpy(popn->val);
-		free(popn->val);
+		/* free(popn->val);  */
+		q->dval(popn->val);
 		free(popn);
 		q->nmemb--;
 	}

@@ -48,14 +48,9 @@
 struct st *st_create(void *(*cpy)(void *),
                      int (*cmp)(void *, void *),
 		     void (*dval)(void *),
-		     void (*printn)(struct st_node *))
+		     void (*printn)(void *))
 {
 	struct st *s;
-
-#ifdef IS_THIS_NEEDED
-	assert(cpy);
-	assert(cmp);
-#endif /* IS_THIS_NEEDED */
 
 	s = malloc(sizeof(struct st));
 	assert(s);
@@ -201,7 +196,7 @@ void st_print(struct st *s)
 	if (s->printn != NULL) {
 		cur = s->head;
 		while(cur != NULL) {
-			s->printn(cur);
+			s->printn(cur->val);
 			cur = cur->next;
 		}
 		putchar('\n');

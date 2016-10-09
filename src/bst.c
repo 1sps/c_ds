@@ -1,13 +1,13 @@
 /*
  * src/bst.c: Binary search tree implementation in C
  * St: 2016-09-29 Thu 02:48 AM
- * Up: 2016-09-30 Fri 08:38 PM
+ * Up: 2016-10-08 Sat 05:37 AM
  *
  * Author: SPS
  *
  * This file is copyright 2016 SPS.
  * 
- * Permission is hereby granted, free of charge, to any erson
+ * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
  * files (the "Software"), to deal in the Software without
  * restriction, including without limitation the rights to use,
@@ -52,6 +52,11 @@
 static struct bst_node *bst_node_create(struct bst *t, void *val);
 static void dval_helper_stack(void *bstn);
 static void *cpy_val_helper_stack(void *bstn);
+static void *cpy_val_helper_queue(void *bstn);
+static void dval_helper_queue(void *val);
+static void *cpy_i_hlpr_st(void *val);
+static void dval_i_hlpr_st(void *val);
+static void printn_i_st(void *val);
 static void bst_hlpr_push_node_to_stack(struct st *s, struct bst_node *bstn);
 static struct bst_node *bst_hlpr_pop_and_destroy(struct st *s, struct bst *t);
 static struct bst_node **bst_get_predessor(struct bst *t,
@@ -199,7 +204,7 @@ void *bst_delete(struct bst *t, void *delval)
 	return retval;
 }
 
-#ifdef RECURSIVE_DESTROY
+#ifdef RECURSIVE
 /*
  * Destroy a bst - recursive version.
  *
@@ -238,7 +243,7 @@ void bst_destroy(struct bst *t)
 	s = st_create(cpy_val_helper_stack, NULL, dval_helper_stack, NULL);
 
 	/* 
-	 * Do an interative post order traversal,
+	 * Do an iterative post order traversal,
 	 * destroying nodes along the way
 	 */
 
@@ -284,9 +289,284 @@ void bst_print(struct bst *t)
     bst_hlpr_print(root, 0, 0, 0, s);
 
     printf("\n");
-    for (int i = 0; i < 5; i++)
+    for (int i = 0; i < 10; i++)
         printf("%s\n", s[i]);
     printf("\n");
+}
+
+#ifdef RECURSIVE
+/*
+ * Helper function to get the height of a tree - recursive.
+ *
+ * @bstn: Root node of the tree
+ */
+static int bst_get_height_hlpr_rec(struct bst_node *bstn)
+{
+	int height;
+	int lheight;
+	int rheight;
+
+	/* Base case */
+	if (bstn == NULL)
+		return 0;
+
+	/* Get height of two subtrees */
+	lheight = bst_get_height_hlpr_rec(bstn->left);
+	rheight = bst_get_height_hlpr_rec(bstn->right);
+
+	/* Calculate height of current node */
+	height = 1 + (lheight > rheight ? lheight : rheight);
+
+	return height;
+}
+#endif /* RECURSIVE */
+
+/*
+ * Helper function to get the height of a tree - iterative.
+ *
+ * @bstn: Root node of the tree
+ */
+static int bst_get_height_hlpr(struct bst_node *root)
+{
+	int i;
+	int height;
+	int lev;
+	int lev_node_count;
+	int new_count;
+	struct bst_node *bstn;
+	struct queue *q;
+	
+	/* Create helper queue */
+	q = q_create(cpy_val_helper_queue, NULL, dval_helper_queue, NULL);
+
+	/*
+	 * Calculate height
+	 */
+
+	lev = 0;
+	lev_node_count = 0;
+
+	/* Start calculation with root */
+	if (root != NULL) {
+		q_push(q, root);
+		lev_node_count = 1;
+	}
+
+	/* If there is at least one node at this level */
+	while (lev_node_count > 0) {
+		new_count = 0;
+
+		/* Dequeue all node of this level and enqueue their children */
+		for (i = 0; i < lev_node_count; i++) {
+			bstn = q_pop(q);
+			if (bstn->left != NULL) {
+				q_push(q, bstn->left);
+				new_count++;
+			}
+			if (bstn->right != NULL) {
+				q_push(q, bstn->right);
+				new_count++;
+			}
+		}
+		
+		/* Update level */
+		lev++;
+
+		/* Update count for the new level that will be processed next */
+		lev_node_count = new_count;
+	}
+
+	/* Height of the tree is the total levels in tree */
+	height = lev;
+
+	/* Destroy helper queue */
+	q_destroy(q);
+
+	return height;
+}
+
+/*
+ * Get height of a BST tree.
+ *
+ * @t: Pointer to the BST structure
+ */
+int bst_get_height(struct bst *t)
+{
+	int height;
+
+	height = bst_get_height_hlpr(t->root);
+
+	return height;
+}
+
+/*
+ * Check if BST is balanced at a given node
+ *
+ * @t:    Pointer to the tree structure
+ * @bstn: Cureent node 
+ */
+static int bst_is_balanced_hlpr(struct bst_node *bstn, int *height)
+{
+	int lbal;
+	int rbal;
+	int lheight;
+	int rheight;
+	int retval;
+
+	/* Base case */
+	if (bstn == NULL) {
+		*height = 0;
+		return 1;
+	}
+
+	/* Check if left subtree is balanced */
+	lbal = bst_is_balanced_hlpr(bstn->left, &lheight);
+	if (lbal != 1) {
+		retval = 0;
+	}
+
+	/* Check if right subtree is balanced - only if left is balanced */
+	if (lbal == 1) {
+		rbal = bst_is_balanced_hlpr(bstn->right, &rheight);
+		if (rbal != 1) {
+			retval = 0;
+		}
+	}
+
+	/* If both subtrees balanced, compare height of subtees */
+	if (lbal == 1 && rbal == 1) {
+		if (lheight - rheight > 1 || rheight - lheight > 1) {
+			retval = 0;
+		} else {
+		/* Tree is balanced at this node */
+			*height = 1 + (lheight > rheight ? lheight : rheight);
+			retval = 1;
+		}
+	}
+
+	return retval;
+}
+
+#ifdef SKIP
+
+/*
+ * Push nodes to helper stack to do iterative post order traversal. This
+ * function pushes all the nodes along the left edge to the stack.
+ *
+ * @sn:   Pointer to stack of nodes
+ * @bstn: Pointer to a bst_node 
+ */
+static struct bst_node *bst_push_node_to_stack(struct st *sn,
+                                               struct bst_node *bstn)
+{
+	while (bstn != NULL) {
+		if (bstn->right != NULL)
+			st_push(sn, bstn->right);
+		st_push(sn, bstn);
+		bstn = bstn->left;
+	}
+	return bstn;
+}
+
+/*
+ * Pop nodes and heights from stack and test if heights are balanced.
+ *
+ * @sn: Pointer to the stack containing post order traversal nodes
+ * @sh: Pointer to the stack containing heights of subtrees
+ * @bstnp: Pointer to the node used to push to stack
+ */
+static int bst_pop_and_process(struct st *sn, struct st *sh,
+                                              struct bst_node **bstnp)
+{
+	int balanced;
+	int height;
+	int *lheight;
+	int *rheight;
+	struct bst_node *cur;
+
+	balanced = 1;
+	while (*bstnp == NULL && !st_is_empty(sn)) {
+
+		cur = st_pop(sn);
+		if (cur->right != NULL && cur->right == st_peek(sn)) {
+			*bstnp = st_pop(sn);
+			st_push(sn, cur);
+		} else {
+			if (cur->right == NULL) {
+				height = 0;
+				st_push(sh, &height);
+			}
+			lheight = st_pop(sh);
+			rheight = st_pop(sh);
+			if (abs(*lheight - *rheight) > 1) {
+				free(lheight);
+				free(rheight);
+				balanced = 0;
+				break;
+			} else {
+				height = 1 + (*lheight > *rheight ?
+				              *lheight : *rheight);
+				st_push(sh, &height);
+			}
+			free(lheight);
+			free(rheight);
+		}
+	}
+	return balanced;
+}
+
+/*
+ * Find out if bst is balanced at a given root node.
+ *
+ * @root: Pointer to the given root bst_node
+ */
+static int bst_is_balanced_hlpr_itr_new(struct bst_node *root)
+{
+	int int_push;
+	int balanced; 
+	struct st *sn;
+	struct st *sh;
+	struct bst_node *bstn;
+
+	sn = st_create(cpy_val_helper_stack, NULL, dval_helper_stack, NULL);
+	sh = st_create(cpy_i_hlpr_st, NULL, dval_i_hlpr_st, printn_i_st);
+
+	balanced = 1;
+	bstn = root;
+	while (bstn != NULL || !st_is_empty(sn)) {
+		if (bstn != NULL)
+			bstn = bst_push_node_to_stack(sn, bstn);
+
+		int_push = 0;
+		st_push(sh, &int_push);
+
+		balanced = bst_pop_and_process(sn, sh, &bstn);
+
+		if (balanced == 0)
+			break;
+	}
+	st_destroy(sn);
+	st_destroy(sh);
+
+	return balanced;
+}
+
+#endif
+
+/*
+ * Check if BST is balanced.
+ *
+ * @t: Pointer to the BST structure
+ */
+int bst_is_balanced(struct bst *t)
+{
+	int retval;
+	/* int height; */
+
+	/* retval = bst_is_balanced_hlpr(t->root, &height); */
+	retval = bst_is_balanced_hlpr_itr_new(t->root);
+
+	return retval;
 }
 
 /* 
@@ -337,6 +617,58 @@ static void *cpy_val_helper_stack(void *bstn)
 }
 
 /*
+ * TODO: Comment
+ *
+ * @bstn: 
+ */
+static void *cpy_val_helper_queue(void *bstn)
+{
+	return bstn;
+}
+
+/*
+ * dval function for helper queue.
+ *
+ * @val: Pointer to value to be destroyed
+ */
+static void dval_helper_queue(void *val)
+{
+	return;
+}
+
+/*
+ * copy function for helper stack which stores heights.
+ *
+ * @val: Pointer to value to be copied
+ */
+static void *cpy_i_hlpr_st(void *val)
+{
+	int *retval;
+
+	retval = malloc(sizeof(int));
+	assert(retval);
+
+	*retval = *(int *) val;
+
+	return retval;
+}
+
+/*
+ * dval function for helper stack which stores heights.
+ *
+ * @val: Pointer to value to be destroyed
+ */
+static void dval_i_hlpr_st(void *val)
+{
+	free(val);
+}
+
+static void printn_i_st(void *val)
+{
+	printf("%d, ", *(int *)val);
+}
+
+/*
  * Push a (pointer to) bst_node to stack
  *
  * @s:    Stack of bst_node pointers
@@ -363,7 +695,8 @@ static void bst_hlpr_push_node_to_stack(struct st *s, struct bst_node *bstn)
 static struct bst_node *bst_hlpr_pop_and_destroy(struct st *s, struct bst *t)
 {
 	struct bst_node *btn;
-	struct bst_node *maybe_rchild;
+	void *maybe_rchild;
+	struct bst_node *rchild;
 	int rchild_first;
 	struct bst_node *retval;
 
@@ -379,18 +712,16 @@ static struct bst_node *bst_hlpr_pop_and_destroy(struct st *s, struct bst *t)
 
 	rchild_first = 0;
 	if (!st_is_empty(s)) {
-		maybe_rchild = st_pop(s);
+		maybe_rchild = st_peek(s);
 		if (maybe_rchild == btn->right)
 			rchild_first = 1;
-		else
-			/* Not right child! Push it back to stack */
-			st_push(s, maybe_rchild);
 	}
 
 	if (rchild_first == 1) {
 		/* Move on with right child */
+		rchild = st_pop(s);
 		st_push(s, btn);
-		retval = maybe_rchild;
+		retval = rchild;
 	} else {
 		/* Destroy currently popped node */
 		t->dval(btn->val);

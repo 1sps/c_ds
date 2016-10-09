@@ -1,7 +1,7 @@
 /* mylib.h: Header file (interface) for my C library
  *
  * St: 2016-09-26 Mon 01:47 AM
- * Up: 2016-10-04 Tue 01:41 PM
+ * Up: 2016-10-09 Sun 02:34 AM
  *
  * Author: SPS
  *
@@ -90,14 +90,14 @@ struct st {
 	void *(*cpy)(void *);              /* copy function */
 	int (*cmp)(void *, void *);        /* compare function */
 	void (*dval) (void *);             /* value destroy function */
-	void (*printn) (struct st_node *); /* print function */
+	void (*printn) (void *);           /* print function */
 	size_t nmemb;                      /* total nodes */   
 
 };
 
 /* Stack functions */
 struct st *st_create(void *(*cpy)(void *), int (*cmp)(void *, void *),
-		     void (*dval)(void *), void (*printn)(struct st_node *));
+		     void (*dval)(void *), void (*printn)(void *));
 void st_push(struct st *s, void *val);
 void *st_pop(struct st *s);
 void st_destroy(struct st *s);
@@ -120,6 +120,7 @@ struct queue {
 	struct q_node *tail;               /* tail of the queue */
 	void *(*cpy)(void *);              /* copy function */
 	int (*cmp)(void *, void *);        /* compare function */
+	void (*dval)(void *);              /* value destroy function */
 	void (*printn) (struct q_node *);  /* print function */
 	size_t nmemb;                      /* total nodes */   
 
@@ -127,7 +128,7 @@ struct queue {
 
 /* Queue functions */
 struct queue *q_create(void *(*cpy)(void *), int (*cmp)(void *, void *),
-                       void (*printn)(struct q_node *));
+                       void (*dval)(void *), void (*printn)(struct q_node *));
 void q_push(struct queue *q, void *val);
 void *q_pop(struct queue *q);
 void q_destroy(struct queue *q);
@@ -362,6 +363,8 @@ struct bst_node *bst_search(struct bst *t, void *val);
 void *bst_delete(struct bst *t, void *val);
 void bst_destroy(struct bst *t);
 void bst_print(struct bst *t);
+int bst_is_balanced(struct bst *t);
+int bst_get_height(struct bst *t);
 
 /* 
  * Graph stuff 
@@ -416,6 +419,36 @@ int graph_dfs(struct graph *g, void *src, void *dest);
 /* TODO */
 char *graph_show_path(struct graph *g, void *src, void *dest);
 int graph_dijkstra(struct graph *g, void *src, void *dest);
+
+/* 
+ * AVL Search tree stuff
+ */
+
+struct avl_node {
+	void *val;                            /* value of node */
+	struct avl_node *left;                /* Pointer to left child */
+	struct avl_node *right;               /* Pointer to right child */
+	int bal;                              /* Balance info */
+};
+
+struct avl {
+	struct avl_node *root; 
+	void *(*cpy)(void *);                 /* copy function */
+	int (*cmp)(void *, void *);           /* compare function */
+	void (*dval)(void *);                 /* node val destroy function */
+	void (*printn) (void *);              /* node print function */
+	size_t nmemb;                         /* total nodes */   
+};
+
+/* AVL Search Tree Functions */ 
+struct avl *avl_create(void *(*cpy)(void *), int (*cmp)(void *, void *),
+                       void (*dval)(void *),
+		       void (*printn) (void *));
+int avl_insert(struct avl *t, void *val);
+struct avl_node *avl_search(struct avl *t, void *val);
+void *avl_delete(struct avl *t, void *val);
+void avl_destroy(struct avl *t);
+void avl_print(struct avl *t);
 
 
 #endif  /* MYLIB_H */
